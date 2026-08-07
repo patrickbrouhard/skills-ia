@@ -16,7 +16,7 @@ Utiliser pour les contenus principalement consacrés à l’intelligence artific
 
 - Présentation générale de l’intelligence artificielle : `#tech #ia`
 - Utilisation de l’IA pour programmer : `#tech #ia #dev`
-- Assistant de programmation fondé sur un LLM : `#tech #ia #llm #dev`
+- Assistant de programmation fondé sur un LLM : `#tech #ia #dev #llm`
 - Génération d’images : `#tech #ia #image`
 - Génération de vidéos : `#tech #ia #video`
 - Génération ou traitement de musique : `#tech #ia #audio #musique`
