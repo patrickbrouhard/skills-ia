@@ -1,0 +1,91 @@
+# =========================
+# Secrets / environnement
+# =========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+.venv/
+venv/
+env/
+
+# =========================
+# Node / JavaScript
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Build / distributions
+# =========================
+build/
+dist/
+*.egg-info/
+.cache/
+tmp/
+temp/
+
+# =========================
+# Outputs IA générés
+# =========================
+outputs/
+output/
+generated/
+artifacts/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# IDE / éditeurs
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Notebooks
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Tests / fichiers locaux
+# =========================
+coverage/
+test-results/
+
+# =========================
+# Fichiers personnels locaux
+# =========================
+local/
+private/
+scratch/
