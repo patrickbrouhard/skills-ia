@@ -111,7 +111,7 @@ Un concept spécifique dont l'appartenance à une branche est évidente peut êt
 
 Exemple : Rust est un langage de programmation ; un contenu consacré à Rust peut donc être classé `#tech #dev #rust` sans consulter `taxonomy/dev.md`.
 
-Ne consulter `taxonomy/<domaine>.md` que lorsqu'une information nécessaire à la classification n'est pas suffisamment déterminée par cette skill ou par les connaissances générales non ambiguës du modèle, notamment pour :
+Ne consulter `taxonomy/<branche>.md` que lorsqu'une information nécessaire à la classification n'est pas suffisamment déterminée par cette skill ou par les connaissances générales non ambiguës du modèle, notamment pour :
 
 - vérifier un tag canonique ou une relation non évidente ;
 - départager plusieurs tags proches ;
@@ -120,6 +120,18 @@ Ne consulter `taxonomy/<domaine>.md` que lorsqu'une information nécessaire à l
 - vérifier une convention propre à un domaine.
 
 En cas de conflit entre cette skill et un fichier de taxonomie spécialisé, le fichier de taxonomie prévaut.
+
+### Références spécialisées
+
+- `#tech` → `taxonomy/tech.md`
+- `#dev` → `taxonomy/dev.md`
+- `#devops` → `taxonomy/devops.md`
+- `#ia` → `taxonomy/ia.md`
+- `#cybersécurité` → `taxonomy/cybersécurité.md`
+- `#philosophie` → `taxonomy/philosophie.md`
+- `#religion` → `taxonomy/religion.md`
+- `#politique` → `taxonomy/politique.md`
+- `#business` → `taxonomy/business.md`
 
 ## Format de sortie
 

@@ -34,36 +34,9 @@ Utiliser pour les contenus principalement consacrés à l'étude rationnelle des
 - Réflexion sur la nature de la science : `#philosophie #philosophie-des-sciences`
 - Étude philosophique du beau et de l'art : `#philosophie #esthétique`
 
-## Doctrines et traditions
+## Doctrines, traditions et philosophes
 
-Lorsqu'une doctrine ou une tradition philosophique constitue un sujet important du contenu, utiliser son tag spécifique.
-
-Tags courants :
-
-- `#platonisme`
-- `#aristotélisme`
-- `#stoïcisme`
-- `#épicurisme`
-- `#scepticisme`
-- `#rationalisme`
-- `#empirisme`
-- `#idéalisme`
-- `#matérialisme`
-- `#existentialisme`
-- `#phénoménologie`
-- `#pragmatisme`
-- `#thomisme`
-
-### Exemples
-
-- Présentation de la philosophie stoïcienne : `#philosophie #stoïcisme`
-- Comparaison entre rationalisme et empirisme : `#philosophie #épistémologie #rationalisme #empirisme`
-- Métaphysique de Thomas d'Aquin : `#philosophie #métaphysique #thomisme`
-- Analyse de l'existentialisme de Sartre : `#philosophie #existentialisme`
-
-## Philosophes
-
-Lorsqu'un contenu est principalement consacré à la pensée d'un philosophe, son nom peut être utilisé comme tag.
+Une doctrine, une tradition philosophique ou un philosophe peut recevoir un tag spécifique lorsqu'il constitue un sujet important du contenu et que ce tag améliore réellement la recherche.
 
 ### Exemples
 

@@ -13,10 +13,10 @@ Utiliser pour les contenus principalement consacrés au développement logiciel,
 
 ### Exemples
 
-- Tutoriel général sur la programmation : `#dev`
-- Tutoriel Python : `#dev #python`
-- Développement d'une API en Go : `#dev #go #api`
-- Tests automatisés en Java : `#dev #java #test`
+- Tutoriel général sur la programmation : `#tech #dev`
+- Tutoriel Python : `#tech #dev #python`
+- Développement d'une API en Go : `#tech #dev #go #api`
+- Tests automatisés en Java : `#tech #dev #java #test`
 
 ## Tags spécifiques courants
 
@@ -31,5 +31,6 @@ Utiliser pour les contenus principalement consacrés au développement logiciel,
 
 - C++ → `#cpp`
 - C# → `#csharp`
+- Base de données → `#bdd`
 
 ---

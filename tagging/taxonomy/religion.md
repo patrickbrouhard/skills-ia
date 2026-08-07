@@ -107,4 +107,4 @@ Ajouter des tags plus spécifiques lorsqu'ils sont évidents et utiles pour retr
 * Méditation dans le bouddhisme zen : `#religion #bouddhisme #zen #méditation`
 * Étude philosophique de la vacuité bouddhiste : `#religion #bouddhisme #philosophie #métaphysique`
 
-Pour les distinctions doctrinales, écoles ou traditions moins évidentes, consulter une référence spécialisée plutôt que d'inventer une relation taxonomique.
+Ne pas inventer de relation taxonomique pour les distinctions doctrinales, écoles ou traditions dont la classification est ambiguë.

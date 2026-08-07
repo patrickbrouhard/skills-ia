@@ -14,23 +14,26 @@ Utiliser pour les contenus principalement consacrés à l’intelligence artific
 
 ### Exemples
 
-- Présentation générale de l’intelligence artificielle : `#ia`
-- Utilisation de l’IA pour programmer : `#ia #dev`
-- Assistant de programmation fondé sur un LLM : `#ia #llm #dev`
-- Génération d’images : `#ia #image`
-- Génération de vidéos : `#ia #video`
-- Génération ou traitement de musique : `#ia #audio #musique`
-- Automatisation d’une entreprise avec l’IA : `#ia #business #automatisation`
-- Recherche scientifique utilisant le machine learning : `#ia #machine-learning #science`
+- Présentation générale de l’intelligence artificielle : `#tech #ia`
+- Utilisation de l’IA pour programmer : `#tech #ia #dev`
+- Assistant de programmation fondé sur un LLM : `#tech #ia #llm #dev`
+- Génération d’images : `#tech #ia #image`
+- Génération de vidéos : `#tech #ia #video`
+- Génération ou traitement de musique : `#tech #ia #audio #musique`
+- Automatisation d’une entreprise avec l’IA : `#tech #ia #business #automatisation`
+- Recherche scientifique utilisant le machine learning : `#tech #ia #machine-learning #science`
 
-## Tags spécifiques courants
+## Sous-tags courants
 
 - `#llm`
 - `#machine-learning`
 - `#deep-learning`
+- `#prompting`
+
+## Tags fréquemment associés
+
 - `#agent`
 - `#automatisation`
-- `#prompting`
 - `#image`
 - `#video`
 - `#audio`
