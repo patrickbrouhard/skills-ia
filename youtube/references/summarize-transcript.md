@@ -1,74 +1,124 @@
 # Prompt pour résumer une vidéo YouTube à partir de sa transcription
 
-Ton travail consiste à produire, au format markdown, le résumé du contenu d’une vidéo YouTube à partir de sa transcription, sans insérer de commentaires, et sans ajouter d'interprétations personnelles.
-Cette transcription est souvent générée automatiquement par Youtube et peut donc contenir des erreurs, des omissions ou des passages incompréhensibles, donc tu devras parfois interpréter le sens général du contenu pour produire un résumé utile et précis.
+Ton travail consiste à produire, au format Markdown, un résumé clair, fidèle et suffisamment synthétique du contenu d’une vidéo YouTube à partir de sa transcription.
 
-La longueur et le niveau de détail du résumé doivent s’adapter à la longueur, à la densité et à la structure de la source. Le résumé ne doit pas être artificiellement limité à quelques bullet points lorsque la vidéo est longue ou riche en informations.
+Ne formule aucun commentaire sur ton travail et n'ajoute aucune information, interprétation ou recommandation absente de la vidéo.
 
-Utilise les repères suivants comme ordres de grandeur, sans les appliquer mécaniquement :
+La transcription est souvent générée automatiquement par YouTube et peut contenir des erreurs, des omissions ou des passages incompréhensibles. Utilise le contexte pour comprendre le sens lorsqu'il est raisonnablement identifiable, mais ne transforme jamais une reconstruction incertaine en information certaine.
 
-* Pour une vidéo courte, d’environ 10 minutes ou moins : généralement 3 à 5 bullet points.
-* Pour une vidéo de longueur moyenne, d’environ 10 à 30 minutes : utilise plusieurs sections avec des headings et suffisamment de bullet points pour couvrir les différentes parties importantes.
-* Pour une vidéo longue, de plus de 30 minutes : produis un résumé plus développé, organisé en plusieurs sections thématiques ou chronologiques.
-* Pour une conférence, un entretien, un débat ou un contenu particulièrement dense : privilégie la couverture des idées importantes plutôt qu’un nombre prédéfini de points.
+## Principes
 
-Passe rapidement à une organisation avec des headings dès que le contenu aborde plusieurs thèmes, étapes, arguments ou parties distinctes. Il n’est pas nécessaire d’attendre d’avoir plus de cinq bullet points.
+* Identifie le sujet, l’idée centrale et les conclusions principales.
+* Conserve les arguments, exemples, chiffres et nuances réellement utiles.
+* Supprime les répétitions, digressions, éléments promotionnels et détails secondaires.
+* N’ajoute aucune information absente de la vidéo.
+* Regroupe les idées par thèmes, arguments ou étapes du raisonnement plutôt que minute par minute.
+* Hiérarchise les informations : toutes les idées de la vidéo ne méritent pas le même niveau de détail.
+* Plus la vidéo est longue ou dense, plus le résumé doit gagner en structure et en hiérarchie — pas simplement en longueur.
+* Le résumé doit permettre de comprendre rapidement le contenu sans reproduire la majorité des informations de la vidéo.
+* Les sections proposées ci-dessous sont facultatives : il s'agit d'un répertoire de structures possibles, pas d'un gabarit à remplir.
+* Utilise uniquement les sections qui apportent une information distincte et utile.
+* Évite de répéter la même idée dans plusieurs sections.
+* Dans la conclusion, reformuler uniquement les conclusions ou recommandations effectivement soutenues par la vidéo ; ne pas ajouter de généralisation rhétorique pour donner une impression de clôture.
 
-Les headings doivent décrire clairement le contenu de chaque section. Par exemple :
+## Structure
 
-* `## Contexte`
-* `## Thèse principale`
-* `## Arguments`
-* `## Méthode`
-* `## Résultats`
-* `## Objections`
-* `## Applications`
-* `## Conclusion`
+### En bref
 
-Choisis les headings en fonction de la structure réelle de la vidéo. N’utilise pas systématiquement les mêmes.
+Commence par 2 à 3 phrases permettant de comprendre immédiatement :
 
-Règles de rédaction :
+* le sujet de la vidéo ;
+* son idée ou objectif principal ;
+* sa conclusion principale lorsqu'il y en a une.
 
-* Utilise des bullet points courts, mais suffisamment détaillés pour être compréhensibles sans revoir immédiatement la vidéo.
-* Résume les idées principales, les arguments, les explications, les exemples importants, les résultats et les conclusions.
-* Conserve les distinctions, nuances et réserves importantes de l’auteur.
-* Lorsque la vidéo présente plusieurs étapes, arguments ou positions, résume-les séparément.
-* Lorsque le contenu suit un raisonnement, respecte son enchaînement logique.
-* N’ajoute aucune information qui ne figure pas dans le contenu fourni.
-* Ne transforme pas une hypothèse, une opinion ou une affirmation de l’auteur en fait établi.
-* Élimine les introductions promotionnelles, les appels à s’abonner, les sponsors, les répétitions et les digressions sans intérêt.
-* Ne mentionne pas qu’il s’agit d’une transcription.
-* Ne cherche pas à produire le résumé le plus court possible : cherche à produire le résumé le plus utile proportionnellement à la richesse de la source.
-* Ne place à l’intérieur de ce bloc que le résumé, sans commentaire sur ton travail ni formule introductive.
+### Citation représentative — optionnel
 
-Exemple pour une vidéo courte :
+Si une formulation particulièrement forte ou représentative apparaît clairement dans la transcription, tu peux l'ajouter :
 
-```markdown
-- Première idée importante.
-- Deuxième idée importante.
-- Conclusion principale.
-```
+> [!quote]
+> Auteur, si son identité est établie de manière fiable
+> Citation exacte
 
-Exemple pour une vidéo plus longue ou structurée :
+N'utilise une citation que si sa formulation peut être reproduite avec suffisamment de confiance.
+Ne reconstruis, ne corrige et n'améliore jamais une phrase pour en faire une citation.
+En cas de doute, omets cette section.
 
-```markdown
-## Contexte
+### Points clés
 
-- Présentation du problème abordé.
-- Éléments nécessaires pour comprendre la discussion.
+Lorsque cela apporte une vue d'ensemble utile, présente les principales idées sous forme de quelques puces concises.
+Cette section doit pouvoir être parcourue rapidement sans lire le résumé détaillé.
+Ne répète pas ici mécaniquement tout ce qui sera développé ensuite.
 
-## Arguments principaux
+### Résumé détaillé — si nécessaire
 
-- Premier argument et sa justification.
-- Deuxième argument et l’exemple utilisé pour l’illustrer.
-- Limite ou objection reconnue par l’auteur.
+Utilise cette section lorsque le contenu est suffisamment riche pour nécessiter davantage qu'une vue d'ensemble.
+Organise le contenu en sections avec des titres descriptifs correspondant à la structure réelle de la vidéo.
 
-## Applications
+Exemple :
 
-- Conséquences pratiques présentées dans la vidéo.
-- Recommandations ou pistes proposées.
+#### [Thème ou partie]
 
-## Conclusion
+Résumé des idées, arguments, mécanismes et exemples importants.
 
-- Conclusion générale et principal enseignement à retenir.
-```
+#### [Thème ou partie]
+
+Résumé.
+Ajoute ou retire librement des sections selon le contenu.
+Pour les contenus longs ou complexes, utilise si nécessaire un niveau supplémentaire de sous-sections.
+
+### Faits, chiffres ou exemples importants — optionnel
+
+Utilise cette section uniquement lorsqu'il existe des chiffres, résultats, faits ou exemples concrets qui méritent d'être retrouvés facilement séparément.
+Ne répète pas des éléments déjà suffisamment mis en valeur ailleurs.
+
+### Nuances, objections ou limites — optionnel
+
+Utilise cette section lorsque la vidéo contient des réserves, incertitudes, objections, contre-arguments ou limites importantes pour comprendre correctement le propos.
+Ne crée pas toi-même d'objection ou de critique absente de la vidéo.
+
+### À retenir — optionnel
+
+Utilise cette section uniquement lorsqu'une courte synthèse finale apporte une réelle valeur après le résumé.
+Présente quelques conclusions ou enseignements essentiels.
+Ne répète pas simplement `Points clés` avec d'autres mots.
+
+### Ressources mentionnées — optionnel
+
+Inclure uniquement les ressources explicitement mentionnées dans la vidéo et suffisamment identifiables à partir des informations disponibles.
+
+Format :
+
+* `[Titre ou nom de la ressource](URL)` — courte indication de son rôle dans la vidéo.
+
+Ne recherche, n'invente et n'ajoute aucune ressource extérieure.
+
+## Adaptation à la durée et à la densité
+
+La durée est seulement un indicateur. La densité et la nature du contenu doivent déterminer la longueur réelle du résumé.
+
+* **Moins de 10 minutes** : généralement un format compact avec `En bref`, quelques points clés et peu ou pas de sections supplémentaires.
+* **10 à 30 minutes** : utiliser plusieurs grandes parties lorsque le contenu les justifie.
+* **30 à 90 minutes** : privilégier une structure hiérarchisée avec des sections et éventuellement des sous-sections.
+* **Plus de 90 minutes** : commencer par une vue d’ensemble puis organiser les grandes parties séparément lorsque cela facilite la compréhension.
+
+Adapter également la structure au type de contenu :
+
+* interview → thèmes et positions importantes ;
+* tutoriel → objectif, prérequis éventuels et étapes essentielles ;
+* débat → positions, arguments, objections et réponses ;
+* cours → concepts, explications, relations entre concepts et exemples ;
+* démonstration technique → objectif, architecture ou méthode, étapes importantes et résultat ;
+* actualité ou analyse → contexte, faits principaux, interprétation de l'auteur et conclusions.
+
+## Style
+
+* Utilise du Markdown.
+* Utilise des titres descriptifs plutôt que génériques lorsque cela est possible.
+* Reste synthétique, précis et naturel.
+* Privilégie des formulations informatives plutôt qu'une succession de fragments télégraphiques.
+* Évite les répétitions entre les sections.
+* Omet toute section non pertinente.
+* Ne crée jamais une section uniquement pour respecter le modèle.
+* Pour le code, utilise un bloc triple backticks avec le langage indiqué, par exemple `python`.
+* Ne mentionne pas la transcription ni le processus utilisé pour produire le résumé.
+* Ne place dans la réponse finale que le résumé.

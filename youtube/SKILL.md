@@ -114,3 +114,15 @@ Il nécessite notamment :
 * un accès Internet fonctionnel.
 
 Si ces prérequis ne sont pas disponibles dans l'environnement courant, ne pas prétendre avoir extrait la transcription.
+
+## Dépendances
+
+Le script nécessite l'exécutable `yt-dlp` disponible dans le `PATH`.
+
+Si `yt-dlp` n'est pas disponible :
+
+- ne pas installer automatiquement `yt-dlp` avec `pip`, winget ou un autre gestionnaire de paquets ;
+- ne pas créer d'environnement Python temporaire pour contourner le problème ;
+- signaler que la dépendance n'est pas accessible dans l'environnement courant et indiquer le diagnostic utile.
+
+La configuration ou l'installation des dépendances doit être effectuée séparément du workflow de traitement d'une vidéo.
