@@ -1,8 +1,7 @@
 ---
-
 name: youtube
 description: Extraire, comprendre ou résumer le contenu d'une vidéo YouTube à partir de son URL et de sa transcription.
------------------------------------------------------------------------------------------------------------------------
+---
 
 # YouTube
 

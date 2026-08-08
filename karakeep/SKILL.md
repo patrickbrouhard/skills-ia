@@ -1,8 +1,7 @@
 ---
-
 name: karakeep
 description: Ajouter, enrichir, rechercher ou gérer des bookmarks dans Karakeep, notamment en produisant automatiquement résumés et tags à partir du contenu d'une ressource.
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
 # Karakeep
 
