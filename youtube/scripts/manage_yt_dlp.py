@@ -19,6 +19,13 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+
 HTTP_TIMEOUT_SECONDS = 60
 
 Channel = Literal["stable", "nightly", "master"]

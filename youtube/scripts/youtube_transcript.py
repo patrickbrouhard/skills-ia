@@ -19,6 +19,13 @@ from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+
 SCHEMA_VERSION = "1.0"
 SUBTITLE_FORMAT = "json3"
 ACCEPTED_MANUAL_LANGUAGES = {"en", "fr"}
