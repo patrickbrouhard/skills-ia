@@ -59,18 +59,16 @@ python scripts/karakeep.py add "<URL>" \
 
 Les tags transmis au CLI ne doivent pas inclure le caractère `#`.
 
-### Cas où plusieurs vidéos sont traitées
+### Fichiers de transcription
 
-Lors du traitement de plusieurs vidéos YouTube :
+Lors du traitement de vidéos YouTube :
 
-1. éviter d'afficher simultanément plusieurs transcriptions complètes dans la sortie des commandes ;
-2. dès la première extraction, enregistrer le JSON de chaque vidéo dans un fichier temporaire distinct ;
-3. lire ensuite ces fichiers séparément pour produire les résumés et les tags ;
-4. ne pas relancer une extraction uniquement parce qu'une sortie combinée a été tronquée ou n'est plus entièrement visible ;
-5. supprimer les fichiers temporaires lorsqu'ils ne sont plus nécessaires.
+1. faire écrire le JSON de chaque extraction dans un fichier temporaire distinct avec `youtube_transcript.py --output` ;
+2. lire le JSON depuis ce fichier sans dépendre de son affichage complet dans la sortie standard ;
+3. chaque vidéo ne doit normalement nécessiter qu'un seul appel à `youtube_transcript.py` ;
+4. supprimer les fichiers temporaires lorsqu'ils ne sont plus nécessaires.
 
-Une vidéo ne doit normalement nécessiter qu'un seul appel à `youtube_transcript.py`, sauf si cet appel a réellement échoué et qu'une nouvelle tentative est justifiée par les règles de la skill `youtube`.
-
+Une nouvelle extraction n'est justifiée que si l'appel précédent a réellement échoué et qu'une nouvelle tentative est prévue par les règles de la skill `youtube`.
 
 ## Workflow pour un article ou une page Web
 

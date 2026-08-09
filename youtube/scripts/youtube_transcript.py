@@ -900,6 +900,16 @@ def parse_arguments() -> argparse.Namespace:
         help="indente le JSON pour le rendre lisible par un humain",
     )
 
+    parser.add_argument(
+        "--output",
+        type=Path,
+        metavar="OUTPUT_FILE",
+        help=(
+            "écrit le document JSON dans ce fichier UTF-8 au lieu de "
+            "l'afficher sur la sortie standard"
+        ),
+    )
+
     return parser.parse_args()
 
 
@@ -937,13 +947,44 @@ def main() -> int:
 
     indent = 2 if arguments.pretty else None
 
-    print(
-        json.dumps(
-            result,
-            ensure_ascii=False,
-            indent=indent,
-        )
+    document = json.dumps(
+        result,
+        ensure_ascii=False,
+        indent=indent,
     )
+
+    if arguments.output is None:
+        print(document)
+        return 0
+
+    try:
+        with arguments.output.open(
+            "w",
+            encoding="utf-8",
+            newline="\n",
+        ) as output_file:
+            output_file.write(document)
+            output_file.write("\n")
+    except OSError as exc:
+        error_result = {
+            "schema_version": SCHEMA_VERSION,
+            "error": {
+                "type": exc.__class__.__name__,
+                "message": (
+                    f"Impossible d'écrire le fichier de sortie "
+                    f"{arguments.output}: {exc}"
+                ),
+            },
+        }
+        print(
+            json.dumps(
+                error_result,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        return 1
 
     return 0
 

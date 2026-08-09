@@ -29,20 +29,26 @@ Ne pas se contenter du titre, de la description ou des métadonnées lorsqu'une 
 
 Pour une URL YouTube :
 
-1. exécuter `scripts/youtube_transcript.py` avec l'URL ;
+1. créer un fichier de sortie temporaire dédié ;
+2. exécuter `scripts/youtube_transcript.py` avec l'URL et `--output` ;
    1. transmettre l'URL YouTube comme un argument brut valide ;
    2. ne pas inclure de syntaxe Markdown, de guillemets littéraux dans la valeur de l'argument, ni de caractères d'échappement faisant partie de l'URL elle-même ;
-2. vérifier que la commande se termine correctement ;
-3. interpréter le JSON retourné ;
-4. utiliser la transcription comme source principale pour comprendre le contenu ;
-5. utiliser les métadonnées uniquement comme contexte complémentaire ;
-6. poursuivre ensuite selon l'objectif de la tâche appelante.
+3. vérifier que la commande se termine correctement ;
+4. lire et interpréter le JSON depuis le fichier de sortie ;
+5. utiliser la transcription comme source principale pour comprendre le contenu ;
+6. utiliser les métadonnées uniquement comme contexte complémentaire ;
+7. supprimer le fichier temporaire lorsqu'il n'est plus nécessaire ;
+8. poursuivre ensuite selon l'objectif de la tâche appelante.
 
-Exécution minimale :
+Pour toute extraction destinée à être consommée par cette skill, utiliser :
 
 ```bash
-python scripts/youtube_transcript.py "<URL>"
+python scripts/youtube_transcript.py "<URL>" --output "<OUTPUT_FILE>"
 ```
+
+Ne pas dépendre de l'affichage complet du JSON dans la sortie standard.
+
+Sans `--output`, le script conserve l'affichage du JSON sur la sortie standard pour un usage manuel ou de débogage.
 
 Ne demander des options supplémentaires au script que si elles sont réellement nécessaires à la tâche.
 
