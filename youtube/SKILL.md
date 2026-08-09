@@ -29,6 +29,8 @@ Ne pas se contenter du titre, de la description ou des métadonnées lorsqu'une 
 Pour une URL YouTube :
 
 1. exécuter `scripts/youtube_transcript.py` avec l'URL ;
+  1. Lors de l'appel au script, transmettre l'URL YouTube comme un argument brut valide.
+  2. Ne pas inclure de syntaxe Markdown, de guillemets littéraux dans la valeur de l'argument, ni de caractères d'échappement faisant partie de l'URL elle-même.
 2. vérifier que la commande se termine correctement ;
 3. interpréter le JSON retourné ;
 4. utiliser la transcription comme source principale pour comprendre le contenu ;
