@@ -89,3 +89,6 @@ test-results/
 local/
 private/
 scratch/
+
+youtube/scripts/yt-dlp.exe
+youtube/scripts/yt-dlp

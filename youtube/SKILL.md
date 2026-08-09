@@ -117,12 +117,12 @@ Si ces prérequis ne sont pas disponibles dans l'environnement courant, ne pas p
 
 ## Dépendances
 
-Le script nécessite l'exécutable `yt-dlp` disponible dans le `PATH`.
+Le script nécessite Python 3.
 
-Si `yt-dlp` n'est pas disponible :
+Pour `yt-dlp`, il utilise dans cet ordre :
 
-- ne pas installer automatiquement `yt-dlp` avec `pip`, winget ou un autre gestionnaire de paquets ;
-- ne pas créer d'environnement Python temporaire pour contourner le problème ;
-- signaler que la dépendance n'est pas accessible dans l'environnement courant et indiquer le diagnostic utile.
+1. le binaire `yt-dlp.exe` ou `yt-dlp` situé dans `scripts/` ;
+2. à défaut, l'exécutable `yt-dlp` disponible dans le `PATH`.
 
-La configuration ou l'installation des dépendances doit être effectuée séparément du workflow de traitement d'une vidéo.
+Ne pas vérifier séparément la présence de `yt-dlp` avant d'exécuter le script.
+Laisser le script effectuer lui-même la détection et retourner une erreur explicite si nécessaire.
