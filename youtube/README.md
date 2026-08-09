@@ -1,38 +1,32 @@
-# YouTube Transcript CLI
+# Skill YouTube
 
-Ce script Python extrait les métadonnées et le transcript d'une vidéo YouTube et renvoie le résultat sous forme de JSON structuré.
+Skill permettant à un agent d'extraire, comprendre et résumer le contenu d'une vidéo YouTube à partir de ses sous-titres.
 
-Il utilise uniquement la bibliothèque standard de Python.
+Elle s'appuie sur deux scripts Python :
 
-La seule dépendance externe est l'exécutable **yt-dlp**. Le script peut utiliser soit un binaire placé directement à côté du script, soit une installation disponible dans le `PATH`.
+```text
+scripts/youtube_transcript.py
+scripts/manage_yt_dlp.py
+```
 
-## Prérequis
+et sur deux références spécialisées :
 
-* Python 3
-* `yt-dlp`
-* une connexion Internet
+```text
+references/summarize-transcript.md
+references/manage-yt-dlp.md
+```
 
-Aucun paquet Python externe n'est nécessaire : il n'y a pas de `requests`, de module Python `yt_dlp`, ni de `requirements.txt` à installer.
-
-## Recherche de yt-dlp
-
-Le script recherche `yt-dlp` dans cet ordre :
-
-1. un binaire situé dans le même répertoire que `youtube_transcript.py` :
-
-   * `yt-dlp.exe` sous Windows ;
-   * `yt-dlp` sous Linux/macOS ;
-2. à défaut, un exécutable `yt-dlp` disponible dans le `PATH`.
-
-Structure recommandée pour une installation autonome de la skill :
+## Structure
 
 ```text
 youtube/
-├── SKILL.md
 ├── README.md
+├── SKILL.md
 ├── references/
+│   ├── manage-yt-dlp.md
 │   └── summarize-transcript.md
 └── scripts/
+    ├── manage_yt_dlp.py
     ├── youtube_transcript.py
     └── yt-dlp.exe
 ```
@@ -43,79 +37,105 @@ Sous Linux ou macOS, le binaire local peut être nommé :
 scripts/yt-dlp
 ```
 
-et doit disposer du droit d'exécution.
+Le binaire `yt-dlp` est volontairement ignoré par Git.
 
-Cette organisation permet notamment d'éviter de dépendre de l'emplacement choisi par un gestionnaire de paquets ou par l'environnement d'exécution.
+## Fonctionnement
 
-Si aucun binaire local n'est trouvé, le script utilise :
+Le workflow normal est :
 
 ```text
+URL YouTube
+   ↓
+youtube_transcript.py
+   ↓
 yt-dlp
+   ├── métadonnées
+   └── identification des sous-titres
+   ↓
+téléchargement JSON3 avec urllib
+   ↓
+JSON structuré
+   ↓
+agent
+   ├── compréhension
+   ├── résumé
+   └── utilisation par un autre workflow
 ```
 
-depuis le `PATH`.
+Aucune vidéo n'est téléchargée.
 
-## Vérification des prérequis
+`yt-dlp` sert principalement à récupérer les métadonnées de la vidéo et à identifier la piste de sous-titres appropriée.
 
-Python :
+Le fichier de sous-titres `json3` est ensuite téléchargé directement avec `urllib`.
 
-```powershell
-python --version
+## Prérequis
+
+* Python 3 ;
+* `yt-dlp` ;
+* accès Internet.
+
+Aucune bibliothèque Python externe n'est nécessaire.
+
+Il n'y a notamment pas de dépendance à :
+
+* `requests` ;
+* `yt_dlp` comme module Python ;
+* `python-dotenv`.
+
+## Recherche de yt-dlp
+
+`youtube_transcript.py` recherche `yt-dlp` dans cet ordre :
+
+1. le binaire placé dans `scripts/` ;
+2. à défaut, `yt-dlp` disponible dans le `PATH`.
+
+Binaire local sous Windows :
+
+```text
+scripts/yt-dlp.exe
 ```
 
-Si `yt-dlp` est installé globalement :
+Binaire local sous Linux/macOS :
 
-```powershell
-yt-dlp --version
+```text
+scripts/yt-dlp
 ```
 
-Sous Windows :
+L'installation locale est recommandée lorsque la skill fonctionne dans un environnement sandboxé.
 
-```powershell
-where.exe yt-dlp
+## Extraction d'une vidéo
+
+Exécution minimale :
+
+```bash
+python scripts/youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-Ces commandes vérifient uniquement l'installation globale. Si un binaire `yt-dlp.exe` est placé dans `scripts/`, c'est celui-ci qui sera utilisé en priorité par `youtube_transcript.py`.
+La sortie est un document JSON écrit sur `stdout`.
 
-## Utilisation
+Pour une sortie indentée :
 
-Depuis le répertoire `scripts` :
-
-```powershell
-python youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID"
-```
-
-Ou avec un chemin explicite :
-
-```powershell
-python "C:\chemin\vers\youtube\scripts\youtube_transcript.py" "https://www.youtube.com/watch?v=VIDEO_ID"
-```
-
-La sortie est écrite sur la sortie standard (`stdout`) sous forme de JSON.
-
-Pour obtenir un JSON indenté et plus lisible :
-
-```powershell
-python youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID" --pretty
+```bash
+python scripts/youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID" --pretty
 ```
 
 ### Options
 
-| Option                        | Description                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------ |
-| `--include-segments`          | Ajoute les segments horodatés du transcript.                                   |
-| `--include-description`       | Ajoute la description complète de la vidéo.                                    |
-| `--include-tags`              | Ajoute les tags YouTube.                                                       |
-| `--include-public-statistics` | Ajoute les nombres de vues, likes et commentaires lorsqu'ils sont disponibles. |
-| `--pretty`                    | Indente le JSON pour le rendre plus lisible.                                   |
+| Option                        | Description                                   |
+| ----------------------------- | --------------------------------------------- |
+| `--include-segments`          | Ajoute les segments horodatés                 |
+| `--include-description`       | Ajoute la description complète                |
+| `--include-tags`              | Ajoute les tags YouTube                       |
+| `--include-public-statistics` | Ajoute les statistiques publiques disponibles |
+| `--pretty`                    | Indente le JSON                               |
 
-Exemple avec plusieurs options :
+Exemple :
 
-```powershell
-python youtube_transcript.py `
-  "https://www.youtube.com/watch?v=VIDEO_ID" `
-  --include-description `
-  --include-public-statistics `
+```bash
+python scripts/youtube_transcript.py \
+  "https://www.youtube.com/watch?v=VIDEO_ID" \
+  --include-description \
+  --include-public-statistics \
   --pretty
 ```
 
@@ -123,71 +143,181 @@ python youtube_transcript.py `
 
 Le script applique les règles suivantes :
 
-1. s'il existe exactement une piste de sous-titres manuels et qu'elle est en français ou en anglais, cette piste est utilisée ;
-2. dans les autres cas, le script recherche la piste automatique correspondant à la langue originale, identifiée par un code YouTube se terminant par `-orig` ;
-3. le format de sous-titres utilisé est `json3`.
+1. s'il existe exactement une piste manuelle en français ou en anglais, elle est utilisée ;
+2. sinon, le script recherche la piste automatique correspondant à la langue originale, généralement identifiée par un code se terminant par `-orig` ;
+3. le format utilisé est `json3`.
 
-Le transcript retourné est normalisé en texte continu. Les retours à la ligne propres à l'affichage des sous-titres YouTube ne sont pas conservés comme structure logique du texte.
-
-## Téléchargement des sous-titres
-
-`yt-dlp` est utilisé pour récupérer les métadonnées de la vidéo et identifier la piste de sous-titres appropriée.
-
-L'URL temporaire de la piste `json3` est ensuite téléchargée directement par le script avec `urllib`, qui fait partie de la bibliothèque standard de Python.
-
-Lorsque `yt-dlp` fournit des en-têtes HTTP associés à la piste de sous-titres, le script les réutilise pour effectuer cette requête.
-
-Aucune vidéo n'est téléchargée.
-
-## Répertoire temporaire
-
-Certains environnements sandboxés empêchent `yt-dlp` d'utiliser le répertoire temporaire système habituel.
-
-Pour éviter ce problème, `youtube_transcript.py` crée lui-même un répertoire temporaire dédié à l'exécution de `yt-dlp`.
-
-Le répertoire courant est utilisé en priorité comme emplacement parent lorsqu'il est inscriptible. À défaut, le mécanisme temporaire standard de Python est utilisé.
-
-Les variables d'environnement sont modifiées uniquement pour le sous-processus `yt-dlp` :
-
-* `TEMP` et `TMP` sous Windows ;
-* `TMPDIR` sous Linux/macOS.
-
-L'environnement global de la session n'est pas modifié.
-
-Le répertoire temporaire est supprimé automatiquement après l'exécution.
+Le transcript est ensuite normalisé en texte continu.
 
 ## Données retournées
 
-Le document JSON contient notamment :
+Le JSON peut notamment contenir :
 
-* l'identifiant, l'URL et le titre de la vidéo ;
-* les informations de chaîne ;
-* la durée et la date de publication ;
-* le transcript ;
-* la langue et le type de sous-titres utilisés ;
-* les chapitres lorsqu'ils sont disponibles ;
-* quelques statistiques calculées sur le transcript.
+* identifiant de la vidéo ;
+* URL canonique ;
+* titre ;
+* chaîne ;
+* durée ;
+* date de publication ;
+* langue des sous-titres ;
+* type de sous-titres ;
+* transcription ;
+* chapitres ;
+* statistiques calculées sur le transcript.
 
-Des champs supplémentaires peuvent être activés avec les options de ligne de commande.
+Des champs supplémentaires peuvent être demandés avec les options de ligne de commande.
+
+## Résumé
+
+Lorsqu'un agent doit résumer la vidéo, les instructions spécialisées se trouvent dans :
+
+```text
+references/summarize-transcript.md
+```
+
+Ce fichier définit notamment :
+
+* la fidélité attendue à la transcription ;
+* le niveau de condensation ;
+* la structure éventuelle du résumé ;
+* la gestion des exemples, chiffres et nuances ;
+* les informations à ne pas inventer.
+
+Il n'est chargé que lorsqu'un résumé est nécessaire.
+
+## Gestion locale de yt-dlp
+
+La maintenance du binaire local est assurée par :
+
+```text
+scripts/manage_yt_dlp.py
+```
+
+Les instructions destinées à l'agent sont séparées dans :
+
+```text
+references/manage-yt-dlp.md
+```
+
+Cette référence n'a pas vocation à être chargée pendant une extraction normale réussie.
+
+### État du binaire
+
+```bash
+python scripts/manage_yt_dlp.py status
+```
+
+Cette commande ne nécessite pas d'accès réseau.
+
+### Vérifier les mises à jour
+
+```bash
+python scripts/manage_yt_dlp.py check
+```
+
+Le script compare la version locale à la dernière release officielle du canal stable.
+
+Exemple de résultat :
+
+```json
+{
+  "status": "up_to_date",
+  "channel": "stable",
+  "local_version": "2026.07.04",
+  "latest_version": "2026.07.04"
+}
+```
+
+Un autre canal peut être vérifié :
+
+```bash
+python scripts/manage_yt_dlp.py check --channel nightly
+python scripts/manage_yt_dlp.py check --channel master
+```
+
+### Installer yt-dlp
+
+```bash
+python scripts/manage_yt_dlp.py install
+```
+
+Le canal `stable` est utilisé par défaut.
+
+Autres possibilités :
+
+```bash
+python scripts/manage_yt_dlp.py install --channel nightly
+python scripts/manage_yt_dlp.py install --channel master
+```
+
+Pour remplacer volontairement un binaire existant :
+
+```bash
+python scripts/manage_yt_dlp.py install --force
+```
+
+L'installation :
+
+1. télécharge l'artefact officiel ;
+2. récupère `SHA2-256SUMS` ;
+3. vérifie le SHA-256 ;
+4. installe le binaire dans `scripts/`.
+
+### Mettre à jour yt-dlp
+
+```bash
+python scripts/manage_yt_dlp.py update
+```
+
+Sans option supplémentaire, le mécanisme de mise à jour intégré de `yt-dlp` conserve le canal courant.
+
+Pour changer explicitement de canal :
+
+```bash
+python scripts/manage_yt_dlp.py update --channel stable
+python scripts/manage_yt_dlp.py update --channel nightly
+python scripts/manage_yt_dlp.py update --channel master
+```
+
+## Répertoires temporaires
+
+Les environnements sandboxés peuvent interdire l'utilisation du répertoire temporaire système habituel.
+
+Les scripts configurent donc un répertoire temporaire accessible pour les processus `yt-dlp`.
+
+Sous Windows, ils définissent pour le sous-processus :
+
+```text
+TEMP
+TMP
+```
+
+Sous Unix :
+
+```text
+TMPDIR
+```
+
+L'environnement global de la session n'est pas modifié.
 
 ## Gestion des erreurs
 
-En cas d'échec, le script écrit un document JSON d'erreur sur la sortie d'erreur (`stderr`) et se termine avec un code de sortie `1`.
+`youtube_transcript.py` et `manage_yt_dlp.py` utilisent des sorties structurées destinées à être interprétées par l'agent.
 
-Exemples de causes possibles :
+En cas d'échec, il faut distinguer notamment :
 
-* aucun `yt-dlp` local ou disponible dans le `PATH` ;
-* binaire local non exécutable sous Linux/macOS ;
+* absence réelle de `yt-dlp` ;
+* erreur de `PATH` ;
+* permissions insuffisantes ;
+* restriction du sandbox ;
+* accès réseau bloqué ;
 * vidéo inaccessible ;
 * absence de piste de sous-titres compatible ;
-* changement côté YouTube non encore pris en charge par la version utilisée de `yt-dlp` ;
-* accès réseau bloqué ;
-* erreur réseau lors du téléchargement des métadonnées ou des sous-titres ;
-* impossibilité de créer un répertoire temporaire utilisable.
+* incompatibilité temporaire entre YouTube et la version de `yt-dlp`.
 
-## Utilisation avec Codex sous Windows
+Une mise à jour de `yt-dlp` ne doit pas être utilisée comme solution générique à toutes les erreurs.
 
-### Installation de la skill
+## Codex sous Windows
 
 Les skills utilisateur peuvent être installées sous :
 
@@ -195,47 +325,35 @@ Les skills utilisateur peuvent être installées sous :
 C:\Users\<UTILISATEUR>\.agents\skills\
 ```
 
-Par exemple :
+Une installation directe du dépôt permet donc d'obtenir :
 
 ```text
 C:\Users\<UTILISATEUR>\.agents\skills\youtube\
 ```
 
-Le script peut alors être exécuté depuis :
+### Sandbox
+
+Certains emplacements d'installation Windows, notamment ceux utilisés par WinGet ou certains alias `WindowsApps`, peuvent être accessibles depuis la session utilisateur mais bloqués dans le sandbox.
+
+Placer `yt-dlp.exe` directement dans :
 
 ```text
-C:\Users\<UTILISATEUR>\.agents\skills\youtube\scripts\youtube_transcript.py
+youtube\scripts\
 ```
 
-Placer `yt-dlp.exe` dans le même répertoire permet d'éviter les restrictions que le sandbox Windows peut appliquer à certains emplacements d'installation, notamment ceux utilisés par WinGet ou les alias `WindowsApps`.
+permet d'éviter cette dépendance à une installation système.
 
-### Accès réseau du sandbox
+L'accès réseau peut toutefois lui aussi nécessiter une autorisation.
 
-Même avec un `yt-dlp.exe` local et exécutable, le sandbox Codex peut interdire l'accès réseau nécessaire à YouTube.
+### Règles ciblées
 
-Le symptôme typique est un échec de connexion vers :
-
-```text
-www.youtube.com:443
-```
-
-avec une erreur Windows telle que :
-
-```text
-WinError 10013
-```
-
-Dans ce cas, le problème ne vient ni de Python, ni de `yt-dlp`, ni du `PATH`. Il s'agit d'une restriction réseau du sandbox.
-
-Pour une installation personnelle et maîtrisée, une règle Codex ciblée peut autoriser uniquement `youtube_transcript.py` à s'exécuter avec les permissions nécessaires.
-
-Créer :
+Pour une machine personnelle et maîtrisée, des règles Codex peuvent être définies dans :
 
 ```text
 C:\Users\<UTILISATEUR>\.codex\rules\default.rules
 ```
 
-Exemple :
+Exemple pour l'extraction :
 
 ```python
 prefix_rule(
@@ -244,153 +362,45 @@ prefix_rule(
         "C:\\Users\\<UTILISATEUR>\\.agents\\skills\\youtube\\scripts\\youtube_transcript.py",
     ],
     decision = "allow",
-    justification = "Autorise le script YouTube personnel à accéder au réseau nécessaire à l'extraction des métadonnées et sous-titres.",
+    justification = "Autorise le script YouTube personnel à accéder au réseau nécessaire à l'extraction.",
 )
 ```
 
-Le chemin doit correspondre à la commande réellement exécutée sur la machine.
+Et pour la maintenance :
 
-Cette règle est volontairement limitée à ce script précis. Il est déconseillé d'autoriser globalement toutes les commandes Python ou tous les scripts d'un répertoire à s'exécuter hors sandbox.
-
-Après création ou modification d'une règle, redémarrer Codex ou l'application utilisant son runtime afin que la configuration soit rechargée.
-
-### Tester une règle Codex
-
-La correspondance d'une règle peut être vérifiée avant utilisation :
-
-```powershell
-codex execpolicy check --pretty `
-  --rules "$HOME\.codex\rules\default.rules" `
-  -- python "C:\Users\<UTILISATEUR>\.agents\skills\youtube\scripts\youtube_transcript.py" "https://www.youtube.com/watch?v=test"
+```python
+prefix_rule(
+    pattern = [
+        "python",
+        "C:\\Users\\<UTILISATEUR>\\.agents\\skills\\youtube\\scripts\\manage_yt_dlp.py",
+    ],
+    decision = "allow",
+    justification = "Autorise le gestionnaire yt-dlp à vérifier, installer et mettre à jour le binaire local.",
+)
 ```
 
-Le résultat attendu contient notamment :
+Ces règles sont propres à la machine et ne doivent pas être intégrées au dépôt.
 
-```json
-{
-  "decision": "allow"
-}
-```
+Il est préférable d'autoriser précisément les scripts nécessaires plutôt que l'ensemble de Python ou du répertoire des skills.
 
-## Installation et mise à jour de yt-dlp
+## Fichiers versionnés et locaux
 
-Deux modes peuvent être utilisés.
-
-### Binaire local à la skill
-
-C'est le mode privilégié lorsque la skill doit être autonome ou fonctionner dans un environnement sandboxé :
+Versionnés :
 
 ```text
-youtube/scripts/yt-dlp.exe
+SKILL.md
+README.md
+references/manage-yt-dlp.md
+references/summarize-transcript.md
+scripts/manage_yt_dlp.py
+scripts/youtube_transcript.py
 ```
 
-Le binaire doit alors être maintenu à jour séparément.
-
-Pour un exécutable officiel téléchargé directement depuis les releases de yt-dlp, la commande intégrée de mise à jour peut être utilisée :
-
-```powershell
-.\yt-dlp.exe -U
-```
-
-Le binaire n'a pas nécessairement vocation à être versionné dans le dépôt Git de la skill. Il peut être installé ou mis à jour séparément lors du déploiement de la skill.
-
-### Installation globale
-
-Le fallback vers le `PATH` permet également d'utiliser une installation globale.
-
-Sous Windows avec WinGet :
-
-```powershell
-winget install yt-dlp
-```
-
-Mise à jour :
-
-```powershell
-winget upgrade yt-dlp
-```
-
-Vérification :
-
-```powershell
-yt-dlp --version
-```
-
-Une installation gérée par un gestionnaire de paquets doit de préférence être mise à jour avec ce même gestionnaire.
-
-### À propos de `yt-dlp -U`
-
-`yt-dlp` possède une commande de mise à jour intégrée :
-
-```powershell
-yt-dlp -U
-```
-
-Elle est particulièrement adaptée aux binaires officiels installés directement.
-
-Lorsqu'une installation est gérée par WinGet, Scoop, Chocolatey, pip ou un autre gestionnaire de paquets, utiliser de préférence le mécanisme de mise à jour de ce gestionnaire.
-
-## Si YouTube casse soudainement l'extraction
-
-Commencer par vérifier la version réellement utilisée.
-
-Si la skill utilise son binaire local :
-
-```powershell
-C:\Users\<UTILISATEUR>\.agents\skills\youtube\scripts\yt-dlp.exe --version
-```
-
-S'il n'existe pas et que le fallback `PATH` est utilisé :
-
-```powershell
-yt-dlp --version
-```
-
-Mettre ensuite `yt-dlp` à jour selon son mode d'installation, puis relancer :
-
-```powershell
-python youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID"
-```
-
-Le projet yt-dlp propose plusieurs canaux de publication, notamment `stable`, `nightly` et `master`. En cas de régression ou de changement récent côté YouTube, une version plus récente peut contenir un correctif qui n'est pas encore présent dans la version stable.
-
-Ne pas mélanger inutilement plusieurs mécanismes d'installation ou de mise à jour.
-
-## Architecture des dépendances
-
-Le script est volontairement conçu pour ne dépendre d'aucune bibliothèque Python tierce :
+Non versionnés :
 
 ```text
-Python 3
-└── bibliothèque standard uniquement
-    ├── argparse
-    ├── dataclasses
-    ├── datetime
-    ├── json
-    ├── os
-    ├── pathlib
-    ├── re
-    ├── shutil
-    ├── subprocess
-    ├── sys
-    ├── tempfile
-    ├── urllib
-    └── typing
-
-Dépendance externe
-└── yt-dlp
-    ├── binaire local à côté du script — prioritaire
-    └── exécutable dans le PATH — fallback
+scripts/yt-dlp.exe
+scripts/yt-dlp
 ```
 
-Cette séparation évite les problèmes liés à `pip`, aux environnements virtuels et aux dépendances installées dans un autre interpréteur Python que celui utilisé pour exécuter le script.
-
-Elle permet également de conserver un script Python autonome et portable tout en isolant clairement la dépendance native nécessaire à l'interaction avec YouTube.
-
-## Notes
-
-Le script utilise `yt-dlp` uniquement pour récupérer les métadonnées nécessaires à l'identification de la vidéo et de ses sous-titres.
-
-Il ne télécharge pas la vidéo elle-même.
-
-Les URL temporaires des pistes de sous-titres fournies par YouTube sont ensuite téléchargées directement avec la bibliothèque standard Python.
+Le dépôt contient ainsi la logique permettant d'installer et de maintenir la dépendance sans versionner le binaire lui-même.

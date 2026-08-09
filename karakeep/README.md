@@ -1,126 +1,336 @@
-# Karakeep pour Codex
+# Skill Karakeep
 
-Karakeep fournit notamment ces opérations :
+Skill permettant à un agent d'ajouter, enrichir, rechercher et gérer des bookmarks dans une instance Karakeep.
 
-* `GET /api/v1/bookmarks/check-url?url=...` pour vérifier un doublon exact ;
-* `POST /api/v1/bookmarks` pour ajouter une URL ;
-* `GET /api/v1/bookmarks/search?q=...` pour faire une recherche plein texte ;
-* `PATCH /api/v1/bookmarks/:bookmarkId` pour modifier un résumé ;
-* `POST /api/v1/bookmarks/:bookmarkId/tags` pour attacher des tags.
+Elle combine :
 
-L’ajout est idempotent : une création renvoie `201`. Si l’URL existe déjà,
-Karakeep renvoie le bookmark existant avec un statut `200`, sans le modifier.
+* l'analyse du contenu par l'agent ;
+* la skill `tagging` pour la classification ;
+* la skill `youtube` lorsqu'une ressource est une vidéo YouTube ;
+* `scripts/karakeep.py` pour les opérations déterministes sur l'API Karakeep.
 
-Ceci est un script minimal utilisable directement par Codex.
+## Structure
 
-## Installation
-
-Aucune bibliothèque Python externe n'est nécessaire.
-
-Le script utilise uniquement la bibliothèque standard de Python, notamment
-`urllib.request` pour les appels HTTP. Il ne dépend donc ni de `requests`,
-ni de `python-dotenv`, et aucun `pip install` n'est requis.
-
-Prérequis :
-
-* Python 3 ;
-* un accès réseau à l'instance Karakeep ;
-* une clé API Karakeep valide.
-
-Configuration :
-
-```bash
-cp .env.example .env
+```text
+karakeep/
+├── README.md
+├── SKILL.md
+└── scripts/
+    ├── .env.example
+    ├── .env
+    └── karakeep.py
 ```
 
-Sous PowerShell, tu peux aussi simplement copier le fichier :
+Le fichier `.env` est local et ignoré par Git.
+
+## Principe
+
+Le script `karakeep.py` est volontairement limité aux opérations Karakeep.
+
+Il ne décide pas lui-même :
+
+* comment résumer une ressource ;
+* quels tags lui attribuer ;
+* comment extraire le contenu d'une vidéo ou d'un article.
+
+Ces tâches appartiennent à l'agent et aux autres skills.
+
+Le workflow général est donc :
+
+```text
+ressource
+   ↓
+agent
+   ├── récupère le contenu
+   ├── comprend la ressource
+   ├── produit un résumé
+   └── appelle la skill tagging
+   ↓
+karakeep.py
+   ├── crée le bookmark
+   ├── transmet le résumé
+   └── attache les tags
+```
+
+## Workflow YouTube
+
+Pour une vidéo YouTube :
+
+```text
+URL
+ ↓
+skill youtube
+ ├── transcription
+ └── métadonnées
+ ↓
+résumé
+ ↓
+skill tagging
+ ↓
+karakeep.py add
+ ↓
+Karakeep
+```
+
+Cela évite de déterminer le résumé ou les tags uniquement à partir du titre de la vidéo.
+
+## Prérequis
+
+* Python 3 ;
+* accès réseau à l'instance Karakeep ;
+* clé API Karakeep valide.
+
+Le script utilise uniquement la bibliothèque standard Python.
+
+Aucun `pip install` n'est nécessaire.
+
+## Configuration
+
+Depuis `karakeep/scripts/`, copier :
+
+```text
+.env.example
+```
+
+vers :
+
+```text
+.env
+```
+
+Sous PowerShell :
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Renseigne ensuite `KARAKEEP_URL` et `KARAKEEP_API_KEY` dans `.env`.
+Sous Linux/macOS :
 
-Le script charge lui-même ce fichier `.env` sans dépendance externe. Les
-variables d'environnement déjà définies dans le système restent prioritaires
-sur les valeurs du fichier.
+```bash
+cp .env.example .env
+```
 
-Le format `.env` pris en charge couvre les cas simples utilisés ici, par
-exemple :
+Renseigner ensuite :
 
 ```dotenv
 KARAKEEP_URL=https://karakeep.example.com
 KARAKEEP_API_KEY=xxxxxxxx
 ```
 
-Le fichier `.env` contient un secret et ne doit pas être ajouté au dépôt Git.
+Le script cherche automatiquement :
 
-Utilisation :
-
-```bash
-python karakeep.py check "https://example.com/article"
-python karakeep.py add "https://example.com/article"
-python karakeep.py search "traefik docker"
+```text
+karakeep/scripts/.env
 ```
 
-Ajouter une URL avec un résumé Markdown et des tags :
+Les variables déjà présentes dans l'environnement du processus restent prioritaires sur celles du fichier.
+
+Le format `.env` est interprété directement par le script sans `python-dotenv`.
+
+## Secrets
+
+`KARAKEEP_API_KEY` est un secret.
+
+Ne jamais :
+
+* versionner `.env` ;
+* afficher la clé dans les logs ;
+* inclure la clé dans un résumé ;
+* inclure la clé dans un prompt ou un fichier de sortie.
+
+Le `.gitignore` du dépôt ignore les fichiers `.env` tout en autorisant `.env.example`.
+
+## Utilisation du CLI
+
+Les exemples suivants supposent une exécution depuis la racine du dépôt.
+
+### Vérifier une URL
 
 ```bash
-python karakeep.py add "https://www.youtube.com/watch?v=VIDEO_ID" \
+python karakeep/scripts/karakeep.py check "https://example.com/article"
+```
+
+Cette commande vérifie l'existence exacte de l'URL.
+
+### Ajouter un bookmark
+
+```bash
+python karakeep/scripts/karakeep.py add "https://example.com/article"
+```
+
+### Ajouter un résumé et des tags
+
+```bash
+python karakeep/scripts/karakeep.py add \
+  "https://example.com/article" \
   --summary-file summary.md \
-  --tag ia \
-  --tag llm
+  --tag tech \
+  --tag devops
 ```
 
-`--summary-file -` lit le résumé depuis l’entrée standard. Les tags ne sont
-attachés qu’après une création réussie. Si le bookmark existe déjà, le script
-renvoie ses données et indique si un résumé est présent, sans rien modifier.
+Les tags transmis au script ne comportent pas le caractère `#`.
 
-Ajouter un résumé à un bookmark existant :
+Ainsi :
 
-```bash
-python karakeep.py set-summary BOOKMARK_ID --summary-file summary.md
+```text
+#tech #devops #docker
 ```
 
-Un résumé existant est protégé par défaut. Son remplacement doit être demandé
-explicitement :
+devient :
+
+```text
+--tag tech --tag devops --tag docker
+```
+
+### Recherche
 
 ```bash
-python karakeep.py set-summary BOOKMARK_ID \
+python karakeep/scripts/karakeep.py search "traefik docker"
+```
+
+La recherche plein texte sert à retrouver des bookmarks selon leur contenu.
+
+Elle ne remplace pas une vérification exacte d'URL.
+
+### Modifier un résumé
+
+```bash
+python karakeep/scripts/karakeep.py set-summary \
+  BOOKMARK_ID \
+  --summary-file summary.md
+```
+
+Par défaut, un résumé existant est protégé.
+
+Pour demander explicitement son remplacement :
+
+```bash
+python karakeep/scripts/karakeep.py set-summary \
+  BOOKMARK_ID \
   --summary-file summary.md \
   --replace
 ```
 
-Le format JSON en sortie est volontaire : Codex pourra facilement interpréter le résultat sans parser du texte destiné à un humain.
+## Idempotence
 
-Pour éviter qu’une recherche approximative ne remplace à tort la vérification des doublons, je séparerais clairement les deux mécanismes :
+L'opération `add` est conçue pour être idempotente.
 
-1. `check-url` décide si **cette URL précise** existe déjà ;
-2. `search` permet à Codex de repérer des contenus similaires ou une autre URL traitant du même sujet ;
-3. `add` s’appuie directement sur l’idempotence du `POST` et distingue les
-   statuts HTTP `200` et `201`.
+Le script distingue notamment :
 
-L’API utilise une authentification Bearer dans l’en-tête `Authorization`. Tu peux créer une clé dédiée dans les paramètres de Karakeep et lui donner uniquement les droits de lecture et de création de bookmarks, si ta version propose les scopes granulaires.
+### `created`
 
-Dans les instructions de ton dépôt, tu peux ensuite écrire quelque chose comme :
+Le bookmark vient d'être créé.
 
-```markdown
-Pour toute opération Karakeep, utilise uniquement :
+### `already_exists`
 
-- `python karakeep/karakeep.py add "<URL>"`
-- `python karakeep/karakeep.py set-summary "<ID>" --summary-file "<FICHIER>"`
-- `python karakeep/karakeep.py search "<requête>"`
-- `python karakeep/karakeep.py check "<URL>"`
+L'URL existait déjà.
 
-Avant tout ajout :
+Le bookmark existant n'est pas modifié automatiquement.
 
-1. utilise `check` lorsque l’utilisateur demande une vérification explicite ;
-2. utilise directement `add` pour un ajout idempotent ;
-3. ne modifie jamais automatiquement un bookmark renvoyé avec le statut
-   `already_exists`.
+### `partially_created`
+
+Le bookmark a été créé mais une étape ultérieure, par exemple l'ajout de tags, a échoué.
+
+L'agent ne doit pas annoncer un succès complet dans ce cas.
+
+## Résumés
+
+Lorsqu'un résumé est transmis avec :
+
+```text
+--summary-file
 ```
 
-La clé ne doit pas être placée dans le dépôt. Une variable d’environnement ou le trousseau du système suffit pour ce niveau de besoin, tout en gardant à l’esprit que Codex exécuté avec ton compte utilisateur pourra théoriquement y accéder.
+le fichier doit contenir uniquement le Markdown destiné au champ `Summary`.
 
-[Search bookmarks \| Karakeep Docs](https://docs.karakeep.app/api/search-bookmarks)
-[Karakeep API \| Karakeep Docs](https://docs.karakeep.app/api/karakeep-api/)
+Un fichier temporaire est généralement utilisé par l'agent puis supprimé après l'opération.
+
+Le résumé doit être produit à partir du contenu réel de la ressource, et non simplement de son titre ou des connaissances générales du modèle.
+
+Pour une vidéo YouTube, les règles de résumé de la skill `youtube` s'appliquent.
+
+## Tags
+
+Les tags sont déterminés par la skill `tagging`.
+
+La taxonomie n'est volontairement pas dupliquée dans la skill Karakeep.
+
+Cela permet d'utiliser les mêmes conventions pour :
+
+* Karakeep ;
+* Obsidian ;
+* d'autres systèmes de gestion de connaissances.
+
+## Sorties JSON
+
+Le CLI retourne des résultats structurés en JSON.
+
+Ce choix permet à l'agent de distinguer précisément :
+
+* création réussie ;
+* ressource déjà existante ;
+* création partielle ;
+* erreur.
+
+L'agent n'a donc pas besoin d'analyser du texte destiné à un humain.
+
+## Sandbox et accès réseau
+
+L'accès à une instance Karakeep peut être bloqué par le sandbox même si l'instance est accessible depuis la machine hôte.
+
+Il faut alors distinguer :
+
+* problème réel de connexion ;
+* mauvaise URL ;
+* clé API invalide ;
+* restriction réseau du sandbox.
+
+Pour un environnement personnel maîtrisé, une règle Codex ciblée peut autoriser uniquement le script Karakeep.
+
+Exemple sous Windows :
+
+```python
+prefix_rule(
+    pattern = [
+        "python",
+        "C:\\Users\\<UTILISATEUR>\\.agents\\skills\\karakeep\\scripts\\karakeep.py",
+    ],
+    decision = "allow",
+    justification = "Autorise le script Karakeep personnel à accéder à l'API Karakeep.",
+)
+```
+
+Cette configuration est propre à la machine et ne doit pas être versionnée dans le dépôt.
+
+## API utilisées
+
+Le script utilise notamment les opérations Karakeep nécessaires à :
+
+* la vérification d'une URL ;
+* la création d'un bookmark ;
+* la recherche ;
+* la lecture d'un bookmark ;
+* la modification du résumé ;
+* l'ajout de tags.
+
+L'authentification utilise une clé API transmise avec un en-tête Bearer.
+
+## Philosophie
+
+La skill suit une séparation volontaire des responsabilités :
+
+```text
+agent
+→ comprend et orchestre
+
+youtube / lecture Web
+→ récupère le contenu
+
+tagging
+→ classifie
+
+karakeep.py
+→ applique les modifications déterministes via l'API
+```
+
+Cette modularité permet de réutiliser chaque skill indépendamment et évite de créer des scripts spécialisés pour chaque combinaison de workflow.
