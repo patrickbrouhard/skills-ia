@@ -8,6 +8,7 @@
 *.key
 credentials.json
 secrets.json
+*.bak
 
 # =========================
 # Python
