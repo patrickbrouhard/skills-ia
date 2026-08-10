@@ -1,63 +1,143 @@
 ---
 name: karakeep
-description: Ajouter, enrichir, rechercher ou gérer des bookmarks dans Karakeep, notamment en produisant automatiquement résumés et tags à partir du contenu d'une ressource.
+description: Rechercher, lire, ajouter, enrichir et organiser des bookmarks, listes et tags dans Karakeep via le serveur MCP karakeep. Utiliser pour toute demande concernant Karakeep, notamment l’ajout d’URL ou de notes, la recherche avancée, la génération de résumés et de tags, l’archivage, les favoris et la gestion de listes ou de tags.
 ---
 
 # Karakeep
 
-Utiliser cette skill lorsqu'une tâche concerne l'ajout, l'enrichissement, la recherche ou la gestion de contenus dans Karakeep.
+Utiliser prioritairement et directement les outils fournis par le serveur MCP
+`karakeep`.
 
-L'objectif principal est de permettre à l'utilisateur de fournir une ressource, généralement une URL, et de l'enregistrer dans Karakeep avec des métadonnées utiles telles qu'un résumé et des tags pertinents.
+Ne pas appeler l’API Karakeep, le CLI Karakeep ou un script Python lorsque le
+MCP fournit l’opération nécessaire.
 
-## Outil Karakeep
+Si le serveur ou les outils MCP Karakeep ne sont pas disponibles :
 
-Pour les opérations sur Karakeep, utiliser :
+1. ne pas tenter de les remplacer silencieusement par un autre mécanisme ;
+2. demander à l’utilisateur de vérifier `/mcp` et la configuration du serveur ;
+3. n’utiliser une solution de secours que si l’utilisateur l’autorise
+   explicitement.
 
-`scripts/karakeep.py`
+Ne **JAMAIS** demander, afficher ou journaliser la clé API Karakeep.
 
-Le script communique avec l'API Karakeep et retourne ses résultats sous forme de JSON.
+Dans Karakeep, un bookmark peut être un lien (URL), un media (ex: une image ou un pdf) ou un texte (une note rapide, un paragraphe copié, etc). Il peut être associé à des tags et à des listes, et enrichis de métadonnées comme un résumé ou des notes.
 
-Ne pas effectuer directement les appels HTTP à l'API lorsque le script fournit déjà l'opération nécessaire.
+## Principes généraux
 
-## Principe général
+Avant toute opération :
 
-Lorsqu'un utilisateur demande d'ajouter une ressource à Karakeep :
+1. déterminer si la demande est une lecture ou une modification ;
+2. identifier précisément les bookmarks, listes ou tags concernés ;
+3. consulter leur état actuel lorsque cela évite une modification incorrecte ;
+4. utiliser seulement les paramètres réellement exposés par les outils MCP ;
+5. vérifier le résultat retourné avant d’annoncer un succès.
+
+Effectuer directement les lectures demandées.
+
+Pour une écriture explicitement demandée, effectuer l’opération dans le périmètre
+indiqué. Demander une précision si la cible ou l’effet attendu reste ambigu.
+
+Ne jamais supprimer un bookmark, une liste ou un tag sans demande explicite.
+
+## Recherche
+
+Utiliser `search-bookmarks` pour rechercher des bookmarks.
+
+Pour une recherche simple, transmettre les termes utiles sans complexifier
+inutilement la requête.
+
+Pour une recherche utilisant des filtres, des dates, des tags, des listes ou des
+opérateurs booléens, lire `references/search-syntax.md` avant de construire la
+requête.
+
+Une recherche sur `url:` est une recherche par correspondance et ne constitue pas
+toujours une vérification exacte de l’URL.
+
+Utiliser `get-bookmark` pour récupérer les métadonnées d’un résultat précis.
+
+Utiliser `get-bookmark-content` lorsque la demande nécessite le contenu archivé
+ou textuel du bookmark, et pas seulement ses métadonnées.
+
+## Ajout d’une ressource
+
+Lorsqu’un utilisateur demande d’ajouter une URL ou une ressource :
 
 1. identifier le type de ressource ;
 2. obtenir suffisamment de contenu pour comprendre réellement la ressource ;
-3. produire un résumé si le contenu permet d'en produire un utile ;
-4. déterminer les tags pertinents à partir du contenu ;
-5. ajouter la ressource à Karakeep avec son résumé et ses tags ;
-6. interpréter le JSON retourné par le script ;
-7. informer succinctement l'utilisateur du résultat.
+3. produire un résumé fidèle si le contenu permet d'en produire un utile ;
+4. déterminer des tags pertinents avec le skill `tagging` ;
+5. créer le bookmark avec `create-bookmark` ;
+6. ajouter les informations supplémentaires avec `update-bookmark` uniquement
+   lorsque l’outil et son schéma le permettent ;
+7. attacher les tags définitifs avec `attach-tag-to-bookmark`, qu’ils existent déjà ou qu’ils doivent être créés automatiquement ;
+8. vérifier le résultat final.
+9. informer succinctement l'utilisateur du résultat.
 
+Préférer fournir dès la création le titre, la note ou le résumé lorsque ces
+champs sont acceptés par `create-bookmark`. Sinon, utiliser `update-bookmark`
+après la création.
+
+Ne jamais inventer un paramètre que le schéma MCP courant n’expose pas.
 Ne pas choisir les tags uniquement à partir du titre lorsqu'un contenu plus complet peut être obtenu.
 
-## Workflow pour une vidéo YouTube
+## Bookmark existant et idempotence
 
-Lorsqu'une URL pointe vers une vidéo YouTube :
+La création d’une URL déjà présente peut retourner le bookmark existant.
 
-1. utiliser la skill `youtube` pour récupérer la transcription et les métadonnées ;
+Si le résultat indique que le bookmark existait déjà :
+
+1. ne pas annoncer qu’un nouveau bookmark a été créé ;
+2. ne pas remplacer automatiquement son titre, son résumé, sa note ou ses tags ;
+3. informer l’utilisateur que la ressource était déjà enregistrée ;
+4. modifier le bookmark seulement si la demande autorise clairement
+   l’enrichissement d’un élément existant.
+
+Ne pas utiliser une recherche approximative comme preuve qu’une URL exacte
+existe déjà.
+
+## Résumés
+
+Produire un résumé en markdown à partir du contenu réellement consulté.
+
+Le résumé ne doit pas être :
+
+- une simple reformulation du titre ;
+- une description générique de la ressource ;
+- une explication du travail effectué par l’agent ;
+- une extrapolation fondée uniquement sur des connaissances générales.
+
+Adapter la longueur du résumé à la richesse de la ressource. Conserver les idées,
+arguments, résultats, nuances et conclusions importants.
+
+Ne pas remplacer un résumé existant sans autorisation explicite.
+
+## Pages Web et articles
+
+Pour enrichir une page Web :
+
+1. consulter son contenu principal ;
+2. ignorer autant que possible la navigation, la publicité et les éléments
+   périphériques ;
+3. produire un résumé fidèle ;
+4. utiliser le skill `tagging` à partir du contenu, et non du seul titre ;
+5. créer ou enrichir le bookmark selon les règles d’idempotence.
+
+Ne pas utiliser les métadonnées seules lorsqu'il est possible de consulter le contenu principal.
+Si le contenu n’est pas accessible, enregistrer l’URL sans prétendre avoir analysé la page.
+
+## Vidéos YouTube
+
+Pour une vidéo YouTube :
+
+1. utiliser le skill `youtube` pour obtenir les métadonnées et la transcription ;
 2. produire un résumé à partir de cette transcription conformément aux règles de la skill `youtube` ;
-3. utiliser la skill `tagging` pour choisir les tags à partir du contenu réel de la vidéo ;
-4. enregistrer le résumé dans un fichier temporaire Markdown ;
-5. appeler `scripts/karakeep.py add` avec :
-   * l'URL ;
-   * le fichier contenant le résumé ;
-   * chacun des tags sélectionnés ;
-6. lire le JSON retourné et vérifier l'état de l'opération.
+3. enregistrer le résumé dans un fichier temporaire Markdown ;
+4. utiliser le skill `tagging` à partir du contenu réel de la vidéo ;
+5. créer ou enrichir le bookmark avec les outils MCP Karakeep ;
+6. vérifier les informations effectivement enregistrées.
 
-Exemple conceptuel :
-
-```bash
-python scripts/karakeep.py add "<URL>" \
-  --summary-file "<SUMMARY_FILE>" \
-  --tag tech \
-  --tag ia \
-  --tag llm
-```
-
-Les tags transmis au CLI ne doivent pas inclure le caractère `#`.
+Ne pas résumer une vidéo uniquement depuis son titre ou sa description lorsque
+la transcription est disponible.
 
 ### Fichiers de transcription
 
@@ -70,178 +150,84 @@ Lors du traitement de vidéos YouTube :
 
 Une nouvelle extraction n'est justifiée que si l'appel précédent a réellement échoué et qu'une nouvelle tentative est prévue par les règles de la skill `youtube`.
 
-## Workflow pour un article ou une page Web
+## Tags
 
-Lorsqu'une URL pointe vers un article ou une page dont le contenu est accessible :
+Pour générer ou attacher des tags :
 
-1. récupérer et lire le contenu pertinent de la page ;
-2. identifier le contenu principal en ignorant autant que possible navigation, publicité et éléments périphériques ;
-3. produire un résumé fidèle au contenu ;
-4. utiliser la skill `tagging` pour choisir les tags ;
-5. ajouter l'URL à Karakeep avec le résumé et les tags.
+1. utiliser le skill `tagging` à partir du contenu réel de la ressource ;
+2. normaliser les noms conformément aux conventions de tagging de l’utilisateur ;
+3. utiliser `get-tags` lorsque cela aide à réutiliser la taxonomie existante et à éviter des variantes inutilement proches ;
+4. utiliser `attach-tag-to-bookmark` avec les noms définitifs des tags.
 
-Ne pas utiliser les métadonnées seules lorsqu'il est possible de consulter le contenu principal.
+`attach-tag-to-bookmark` accepte directement les noms de tags, y compris s'ils n'existent pas encore dans Karakeep (ils s'y créent automatiquement).
 
-## Tagging
+Préférer les tags existants lorsqu’ils expriment correctement le concept. Créer un nouveau tag uniquement lorsqu’aucun tag existant ne convient.
 
-Pour toute génération de tags, appliquer la skill `tagging`.
+Utiliser `detach-tag-from-bookmark` seulement lorsque le retrait est demandé.
 
-Ne pas reproduire ici sa taxonomie.
+Ne pas renommer ou supprimer un tag global simplement pour répondre à une demande portant sur un bookmark.
 
-Les tags doivent être déterminés à partir du contenu analysé et respecter les conventions définies par cette skill.
-
-Avant de les transmettre à `karakeep.py`, supprimer uniquement le préfixe `#`.
-
-Exemple :
-
-```text
-#tech #dev #python
-```
-
-devient :
-
-```bash
---tag tech --tag dev --tag python
-```
-
-## Résumé
-
-Le champ `Summary` doit contenir un résumé utile du contenu, et non :
-
-* une simple reformulation du titre ;
-* une description générique de la ressource ;
-* une explication du travail effectué par l'IA ;
-* des informations inventées à partir des connaissances générales du modèle.
-
-Pour YouTube, suivre les règles de résumé de la skill `youtube`.
-
-Pour les autres ressources, adapter la longueur et la structure du résumé à la richesse du contenu en conservant les idées, arguments, résultats, nuances et conclusions réellement importants.
-
-Utiliser Markdown lorsque cela améliore la lisibilité.
-
-## Création du bookmark
-
-Pour créer un bookmark enrichi :
-
-```bash
-python scripts/karakeep.py add "<URL>" \
-  --summary-file "<SUMMARY_FILE>" \
-  --tag <TAG>
-```
-
-Répéter `--tag` pour chaque tag.
-
-Préférer une seule opération `add` contenant dès le départ le résumé et les tags plutôt qu'une succession d'opérations séparées lorsque toutes les informations sont déjà disponibles.
-
-## Idempotence et bookmarks existants
-
-L'opération `add` est idempotente.
-
-Interpréter notamment les états suivants :
-
-### `created`
-
-Le bookmark vient d'être créé.
-
-Vérifier que :
-
-* le résumé a été inclus lorsqu'il était demandé ;
-* les tags ont été correctement attachés.
-
-### `already_exists`
-
-Le bookmark existait déjà.
-
-Ne pas modifier automatiquement son résumé ou ses tags.
-
-Informer l'utilisateur que la ressource était déjà présente.
-
-Une modification d'un bookmark existant doit être explicitement demandée ou clairement autorisée par la tâche.
-
-### `partially_created`
-
-Le bookmark a été créé, mais une étape ultérieure, par exemple l'ajout des tags, a échoué.
-
-Ne pas annoncer un succès complet.
-
-Préciser quelle partie de l'opération a réussi et laquelle a échoué.
-
-## Modification du résumé
-
-Lorsqu'un résumé doit être ajouté à un bookmark existant :
-
-```bash
-python scripts/karakeep.py set-summary "<BOOKMARK_ID>" \
-  --summary-file "<SUMMARY_FILE>"
-```
-
-Ne pas remplacer automatiquement un résumé existant.
-
-Utiliser `--replace` uniquement lorsque l'utilisateur a explicitement demandé ou autorisé son remplacement.
-
-## Vérification d'une URL
+## Listes
 
 Utiliser :
 
-```bash
-python scripts/karakeep.py check "<URL>"
-```
+- `get-lists` pour identifier les listes disponibles ;
+- `get-list` pour consulter une liste précise ;
+- `create-list` pour créer une liste ;
+- `update-list` pour modifier ses propriétés ;
+- `add-bookmark-to-list` et `remove-bookmark-from-list` pour gérer son contenu.
 
-lorsqu'une vérification explicite de l'existence du bookmark est nécessaire avant une autre décision.
+Vérifier le type de liste avant modification. Une liste intelligente repose sur
+une requête et ne doit pas être traitée automatiquement comme une liste manuelle.
 
-Il n'est pas nécessaire d'effectuer systématiquement cette vérification avant `add`, puisque `add` est lui-même idempotent.
+Lors de la suppression d’une liste, tenir compte du fait que ses listes enfants
+peuvent conserver une référence vers le parent supprimé.
 
-## Recherche
+## Modifications et suppressions
 
-Utiliser :
+Avant une modification importante :
 
-```bash
-python scripts/karakeep.py search "<REQUÊTE>"
-```
+1. lire l’état actuel de la ressource ;
+2. distinguer les champs à conserver de ceux à modifier ;
+3. limiter l’écriture aux champs explicitement concernés ;
+4. vérifier le résultat.
 
-pour rechercher des bookmarks existants.
+Avant une suppression :
 
-Une recherche approximative ne remplace pas une vérification exacte d'URL.
+1. résoudre l’identifiant exact ;
+2. rappeler brièvement l’objet qui sera supprimé si une ambiguïté subsiste ;
+3. utiliser l’outil de suppression seulement après une demande explicite ;
+4. ne pas répéter automatiquement l’opération si son résultat est incertain.
 
-## Fichiers temporaires
+## Erreurs et opérations partielles
 
-Lorsqu'un résumé doit être transmis à `karakeep.py` :
+Toujours interpréter le résultat des outils MCP.
 
-* utiliser un fichier temporaire dédié ;
-* y écrire uniquement le contenu destiné au champ `Summary` ;
-* ne pas y inclure de commentaires techniques ou de raisonnement interne ;
-* supprimer le fichier temporaire après utilisation lorsque l'environnement et le workflow le permettent.
+En cas d’échec :
 
-## Gestion des erreurs
+- distinguer une lecture échouée d’une écriture échouée ;
+- distinguer un échec complet d’une opération partiellement réussie ;
+- indiquer les éléments réellement créés ou modifiés ;
+- ne pas relancer une écriture lorsque son état final est incertain ;
+- proposer une vérification en lecture avant une nouvelle tentative.
 
-Toujours interpréter le code de sortie et le JSON retourné par `karakeep.py`.
+## Réponse à l’utilisateur
 
-En cas d'erreur :
+Après une opération, indiquer succinctement :
 
-* ne pas prétendre que le bookmark a été créé ;
-* conserver la distinction entre création échouée et création partielle ;
-* présenter à l'utilisateur la cause utile de l'échec ;
-* ne pas relancer automatiquement une opération susceptible de modifier des données si son état est incertain.
+- ce qui a été trouvé, créé ou modifié ;
+- le titre du bookmark lorsqu’il est disponible ;
+- les listes et tags effectivement appliqués ;
+- les éléments ignorés ou non pris en charge ;
+- toute opération partiellement réussie.
 
-## Secrets
+Ne pas recopier le résumé complet sauf si l’utilisateur le demande.
 
-Ne jamais :
+Si l’utilisateur demande explicitement un « mode debug », fournir les détails
+techniques non sensibles utiles à la compréhension de l’opération, comme les
+outils appelés, leurs paramètres non secrets, les fichiers consultés et les
+statuts retournés.
 
-* afficher la clé API Karakeep ;
-* copier la clé dans un prompt, un résumé ou un fichier de sortie ;
-* ajouter le fichier `.env` au dépôt ;
-* inclure les secrets dans les logs destinés à l'utilisateur.
-
-Utiliser la configuration déjà prévue par le script.
-
-## Réponse à l'utilisateur
-
-Après une opération réussie, rester concis.
-
-Indiquer au minimum :
-
-* si le bookmark a été créé ou existait déjà ;
-* le titre de la ressource s'il est disponible ;
-* les tags effectivement utilisés.
-
-Ne recopier le résumé complet que si l'utilisateur le demande.
+Ne jamais afficher les clés API, variables d’environnement secrètes, en-têtes
+d’autorisation, jetons, cookies ou autres identifiants sensibles, même en mode
+debug.
