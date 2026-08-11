@@ -128,8 +128,9 @@ Lors du traitement de vidéos YouTube :
 1. utiliser pour chaque vidéo un fichier JSON d’extraction et un fichier Markdown de résumé distincts, notamment afin de traiter correctement les vidéos longues et plusieurs URL dans une même demande ;
 2. faire écrire le JSON de chaque extraction avec `youtube_transcript.py --output` ;
 3. lire le JSON depuis ce fichier sans dépendre de son affichage complet dans la sortie standard ;
-4. chaque vidéo ne doit normalement nécessiter qu'un seul appel à `youtube_transcript.py` ;
-5. supprimer tous les fichiers temporaires de chaque vidéo lorsqu'ils ne sont plus nécessaires.
+4. ne pas réémettre en une seule fois l’intégralité du JSON ou de la transcription sur la sortie standard ; pour un contenu volumineux, lire et traiter la transcription depuis le fichier en portions suffisamment petites pour éviter toute troncature ;
+5. chaque vidéo ne doit normalement nécessiter qu'un seul appel à `youtube_transcript.py` ;
+6. supprimer tous les fichiers temporaires de chaque vidéo lorsqu'ils ne sont plus nécessaires.
 
 Une nouvelle extraction n'est justifiée que si l'appel précédent a réellement échoué et qu'une nouvelle tentative est prévue par les règles de la skill `youtube`.
 
@@ -157,6 +158,8 @@ Utiliser :
 
 - `get_lists` pour identifier les listes disponibles ;
 - `get_list` pour consulter une liste précise ;
+- `get_list_bookmarks` pour énumérer les bookmarks d’une liste et vérifier son contenu ;
+- `get_bookmark_lists` pour vérifier les listes auxquelles appartient un bookmark ;
 - `create_list` pour créer une liste ;
 - `update_list` pour modifier ses propriétés ;
 - `add_bookmark_to_list` et `remove_bookmark_from_list` pour gérer son contenu.
@@ -199,9 +202,9 @@ En cas d’échec :
 Après une opération, indiquer succinctement :
 
 - ce qui a été trouvé, créé ou modifié ;
-- le titre du bookmark lorsqu’il est disponible ;
-- les listes et tags effectivement appliqués ;
-- les éléments ignorés ou non pris en charge ;
+- pour chaque bookmark concerné, son titre lorsqu’il est disponible, l’action effectuée et les tags effectivement appliqués ;
+- les listes créées ou modifiées et, lorsqu’un rattachement multiple était demandé, le nombre de bookmarks effectivement présents ;
+- les éléments ignorés ou non pris en charge, avec une raison concise ;
 - toute opération partiellement réussie.
 
 Si l’utilisateur demande explicitement un « mode debug », fournir les détails techniques non sensibles utiles à la compréhension de l’opération, comme les outils appelés, leurs paramètres non secrets, les fichiers consultés et les statuts retournés.
