@@ -121,4 +121,8 @@ Adapter également la structure au type de contenu :
 * Ne crée jamais une section uniquement pour respecter le modèle.
 * Pour le code, utilise un bloc triple backticks avec le langage indiqué, par exemple `python`.
 * Ne mentionne pas la transcription ni le processus utilisé pour produire le résumé.
-* Ne place dans la réponse finale que le résumé.
+* Lorsque le résumé est le livrable final demandé par l'utilisateur, ne place
+  dans la réponse finale que le résumé.
+* Lorsque le résumé constitue une étape intermédiaire d'un autre workflow,
+  remettre le résumé à la tâche appelante et respecter le format de réponse
+  défini par celle-ci.

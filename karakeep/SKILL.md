@@ -20,7 +20,9 @@ Si le serveur ou les outils MCP Karakeep ne sont pas disponibles :
 
 Ne **JAMAIS** demander, afficher ou journaliser la clé API Karakeep.
 
-Dans Karakeep, un bookmark peut être un lien (URL), un media (ex: une image ou un pdf) ou un texte (une note rapide, un paragraphe copié, etc). Il peut être associé à des tags et à des listes, et enrichis de métadonnées comme un résumé ou des notes.
+Dans Karakeep, un bookmark peut être un lien (URL), un média (par exemple une image ou un PDF) ou un texte (une note rapide, un paragraphe copié, etc.). Il peut être associé à des tags et à des listes, et enrichi de métadonnées comme un résumé, des tags ou des notes.
+
+Le MCP permet actuellement de créer des bookmarks de type `link` ou `text` avec `create_bookmark`. Il ne fournit pas d’outil pour téléverser et créer un bookmark de type `media`. Ne pas prétendre avoir ajouté un fichier média lorsque aucun outil MCP exposé ne permet de le faire.
 
 ## Principes généraux
 
@@ -34,29 +36,17 @@ Avant toute opération :
 
 Effectuer directement les lectures demandées.
 
-Pour une écriture explicitement demandée, effectuer l’opération dans le périmètre
-indiqué. Demander une précision si la cible ou l’effet attendu reste ambigu.
-
+Pour une écriture explicitement demandée, effectuer l’opération dans le périmètre indiqué. Demander une précision si la cible ou l’effet attendu reste ambigu.
 Ne jamais supprimer un bookmark, une liste ou un tag sans demande explicite.
 
 ## Recherche
 
-Utiliser `search-bookmarks` pour rechercher des bookmarks.
-
-Pour une recherche simple, transmettre les termes utiles sans complexifier
-inutilement la requête.
-
-Pour une recherche utilisant des filtres, des dates, des tags, des listes ou des
-opérateurs booléens, lire `references/search-syntax.md` avant de construire la
-requête.
-
-Une recherche sur `url:` est une recherche par correspondance et ne constitue pas
-toujours une vérification exacte de l’URL.
-
-Utiliser `get-bookmark` pour récupérer les métadonnées d’un résultat précis.
-
-Utiliser `get-bookmark-content` lorsque la demande nécessite le contenu archivé
-ou textuel du bookmark, et pas seulement ses métadonnées.
+Utiliser `search_bookmarks` pour rechercher des bookmarks.
+Pour une recherche simple, transmettre les termes utiles sans complexifier inutilement la requête.
+Pour une recherche utilisant des filtres, des dates, des tags, des listes ou des opérateurs booléens, lire `references/search-syntax.md` avant de construire la requête.
+Une recherche sur `url:` est une recherche par correspondance et ne constitue pas toujours une vérification exacte de l’URL.
+Utiliser `get_bookmark` pour récupérer les métadonnées d’un résultat précis.
+Utiliser `get_bookmark_content` lorsque la demande nécessite le contenu archivé ou textuel du bookmark, et pas seulement ses métadonnées.
 
 ## Ajout d’une ressource
 
@@ -66,16 +56,13 @@ Lorsqu’un utilisateur demande d’ajouter une URL ou une ressource :
 2. obtenir suffisamment de contenu pour comprendre réellement la ressource ;
 3. produire un résumé fidèle si le contenu permet d'en produire un utile ;
 4. déterminer des tags pertinents avec le skill `tagging` ;
-5. créer le bookmark avec `create-bookmark` ;
-6. ajouter les informations supplémentaires avec `update-bookmark` uniquement
-   lorsque l’outil et son schéma le permettent ;
-7. attacher les tags définitifs avec `attach-tag-to-bookmark`, qu’ils existent déjà ou qu’ils doivent être créés automatiquement ;
+5. créer le bookmark avec `create_bookmark` ;
+6. ajouter les informations supplémentaires avec `update_bookmark` uniquement lorsque l’outil et son schéma le permettent ;
+7. attacher les tags définitifs avec `attach_tag_to_bookmark`, qu’ils existent déjà ou qu’ils doivent être créés automatiquement ;
 8. vérifier le résultat final.
 9. informer succinctement l'utilisateur du résultat.
 
-Préférer fournir dès la création le titre, la note ou le résumé lorsque ces
-champs sont acceptés par `create-bookmark`. Sinon, utiliser `update-bookmark`
-après la création.
+Fournir le titre dès la création lorsqu’il est disponible. Le schéma actuel de `create_bookmark` n’accepte pas la note ni le résumé ; utiliser `update_bookmark` après la création pour ces champs.
 
 Ne jamais inventer un paramètre que le schéma MCP courant n’expose pas.
 Ne pas choisir les tags uniquement à partir du titre lorsqu'un contenu plus complet peut être obtenu.
@@ -92,8 +79,7 @@ Si le résultat indique que le bookmark existait déjà :
 4. modifier le bookmark seulement si la demande autorise clairement
    l’enrichissement d’un élément existant.
 
-Ne pas utiliser une recherche approximative comme preuve qu’une URL exacte
-existe déjà.
+Ne pas utiliser une recherche approximative comme preuve qu’une URL exacte existe déjà.
 
 ## Résumés
 
@@ -106,9 +92,7 @@ Le résumé ne doit pas être :
 - une explication du travail effectué par l’agent ;
 - une extrapolation fondée uniquement sur des connaissances générales.
 
-Adapter la longueur du résumé à la richesse de la ressource. Conserver les idées,
-arguments, résultats, nuances et conclusions importants.
-
+Adapter la longueur du résumé à la richesse de la ressource. Conserver les idées, arguments, résultats, nuances et conclusions importants.
 Ne pas remplacer un résumé existant sans autorisation explicite.
 
 ## Pages Web et articles
@@ -116,8 +100,7 @@ Ne pas remplacer un résumé existant sans autorisation explicite.
 Pour enrichir une page Web :
 
 1. consulter son contenu principal ;
-2. ignorer autant que possible la navigation, la publicité et les éléments
-   périphériques ;
+2. ignorer autant que possible la navigation, la publicité et les éléments périphériques ;
 3. produire un résumé fidèle ;
 4. utiliser le skill `tagging` à partir du contenu, et non du seul titre ;
 5. créer ou enrichir le bookmark selon les règles d’idempotence.
@@ -131,22 +114,22 @@ Pour une vidéo YouTube :
 
 1. utiliser le skill `youtube` pour obtenir les métadonnées et la transcription ;
 2. produire un résumé à partir de cette transcription conformément aux règles de la skill `youtube` ;
-3. enregistrer le résumé dans un fichier temporaire Markdown ;
+3. enregistrer le résumé dans un fichier temporaire Markdown propre à cette vidéo ;
 4. utiliser le skill `tagging` à partir du contenu réel de la vidéo ;
 5. créer ou enrichir le bookmark avec les outils MCP Karakeep ;
 6. vérifier les informations effectivement enregistrées.
 
-Ne pas résumer une vidéo uniquement depuis son titre ou sa description lorsque
-la transcription est disponible.
+Ne pas résumer une vidéo uniquement depuis son titre ou sa description lorsque la transcription est disponible.
 
-### Fichiers de transcription
+### Fichiers temporaires
 
 Lors du traitement de vidéos YouTube :
 
-1. faire écrire le JSON de chaque extraction dans un fichier temporaire distinct avec `youtube_transcript.py --output` ;
-2. lire le JSON depuis ce fichier sans dépendre de son affichage complet dans la sortie standard ;
-3. chaque vidéo ne doit normalement nécessiter qu'un seul appel à `youtube_transcript.py` ;
-4. supprimer les fichiers temporaires lorsqu'ils ne sont plus nécessaires.
+1. utiliser pour chaque vidéo un fichier JSON d’extraction et un fichier Markdown de résumé distincts, notamment afin de traiter correctement les vidéos longues et plusieurs URL dans une même demande ;
+2. faire écrire le JSON de chaque extraction avec `youtube_transcript.py --output` ;
+3. lire le JSON depuis ce fichier sans dépendre de son affichage complet dans la sortie standard ;
+4. chaque vidéo ne doit normalement nécessiter qu'un seul appel à `youtube_transcript.py` ;
+5. supprimer tous les fichiers temporaires de chaque vidéo lorsqu'ils ne sont plus nécessaires.
 
 Une nouvelle extraction n'est justifiée que si l'appel précédent a réellement échoué et qu'une nouvelle tentative est prévue par les règles de la skill `youtube`.
 
@@ -155,15 +138,16 @@ Une nouvelle extraction n'est justifiée que si l'appel précédent a réellemen
 Pour générer ou attacher des tags :
 
 1. utiliser le skill `tagging` à partir du contenu réel de la ressource ;
-2. normaliser les noms conformément aux conventions de tagging de l’utilisateur ;
-3. utiliser `get-tags` lorsque cela aide à réutiliser la taxonomie existante et à éviter des variantes inutilement proches ;
-4. utiliser `attach-tag-to-bookmark` avec les noms définitifs des tags.
+2. considérer la taxonomie du skill `tagging` comme la source de vérité pour le choix et la normalisation des tags ;
+3. convertir la sortie canonique du skill avant l’appel MCP : séparer les tags, retirer exactement le caractère `#` initial de chacun et construire le tableau `tagsToAttach` attendu par Karakeep ;
+4. utiliser `get_tags` seulement lorsque cela aide à vérifier un nom ou à éviter une variante inutile, sans remplacer les conventions de la taxonomie du skill `tagging` par l’état existant de Karakeep ;
+5. utiliser `attach_tag_to_bookmark` avec les noms définitifs sans `#`.
 
-`attach-tag-to-bookmark` accepte directement les noms de tags, y compris s'ils n'existent pas encore dans Karakeep (ils s'y créent automatiquement).
+Exemple : convertir `#tech #ia #llm` en `["tech", "ia", "llm"]` avant de transmettre les valeurs dans `tagsToAttach`.
 
-Préférer les tags existants lorsqu’ils expriment correctement le concept. Créer un nouveau tag uniquement lorsqu’aucun tag existant ne convient.
+`attach_tag_to_bookmark` accepte directement les noms de tags, y compris s'ils n'existent pas encore dans Karakeep ; ils s'y créent automatiquement.
 
-Utiliser `detach-tag-from-bookmark` seulement lorsque le retrait est demandé.
+Utiliser `detach_tag_from_bookmark` seulement lorsque le retrait est demandé.
 
 Ne pas renommer ou supprimer un tag global simplement pour répondre à une demande portant sur un bookmark.
 
@@ -171,17 +155,16 @@ Ne pas renommer ou supprimer un tag global simplement pour répondre à une dema
 
 Utiliser :
 
-- `get-lists` pour identifier les listes disponibles ;
-- `get-list` pour consulter une liste précise ;
-- `create-list` pour créer une liste ;
-- `update-list` pour modifier ses propriétés ;
-- `add-bookmark-to-list` et `remove-bookmark-from-list` pour gérer son contenu.
+- `get_lists` pour identifier les listes disponibles ;
+- `get_list` pour consulter une liste précise ;
+- `create_list` pour créer une liste ;
+- `update_list` pour modifier ses propriétés ;
+- `add_bookmark_to_list` et `remove_bookmark_from_list` pour gérer son contenu.
 
-Vérifier le type de liste avant modification. Une liste intelligente repose sur
-une requête et ne doit pas être traitée automatiquement comme une liste manuelle.
+Vérifier le type de liste avant modification. Une liste intelligente repose sur une requête et ne doit pas être traitée automatiquement comme une liste manuelle.
 
-Lors de la suppression d’une liste, tenir compte du fait que ses listes enfants
-peuvent conserver une référence vers le parent supprimé.
+Lors de la suppression d’une liste avec `delete_list`, ses bookmarks ne sont pas supprimés et ses listes enfants deviennent des listes racines : leur `parentId` est mis à `null`. Si cet aplatissement n’est pas souhaité, déplacer ou rattacher
+les listes enfants avant la suppression.
 
 ## Modifications et suppressions
 
@@ -221,13 +204,6 @@ Après une opération, indiquer succinctement :
 - les éléments ignorés ou non pris en charge ;
 - toute opération partiellement réussie.
 
-Ne pas recopier le résumé complet sauf si l’utilisateur le demande.
+Si l’utilisateur demande explicitement un « mode debug », fournir les détails techniques non sensibles utiles à la compréhension de l’opération, comme les outils appelés, leurs paramètres non secrets, les fichiers consultés et les statuts retournés.
 
-Si l’utilisateur demande explicitement un « mode debug », fournir les détails
-techniques non sensibles utiles à la compréhension de l’opération, comme les
-outils appelés, leurs paramètres non secrets, les fichiers consultés et les
-statuts retournés.
-
-Ne jamais afficher les clés API, variables d’environnement secrètes, en-têtes
-d’autorisation, jetons, cookies ou autres identifiants sensibles, même en mode
-debug.
+Ne jamais afficher les clés API, variables d’environnement secrètes, en-têtes d’autorisation, jetons, cookies ou autres identifiants sensibles, même en mode debug.
