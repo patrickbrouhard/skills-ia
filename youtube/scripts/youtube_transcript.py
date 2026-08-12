@@ -713,6 +713,162 @@ def build_video_metadata(
     return result
 
 
+def render_agent_markdown(result: dict[str, Any]) -> str:
+    """Construit un document Markdown directement exploitable par un agent."""
+    video = result.get("video")
+    transcript = result.get("transcript")
+    chapters = result.get("chapters")
+    statistics = result.get("statistics")
+
+    if not isinstance(video, dict) or not isinstance(transcript, dict):
+        raise TranscriptError(
+            "Impossible de produire la sortie agent : données incomplètes."
+        )
+
+    title = optional_string(video.get("title")) or "Vidéo YouTube"
+    lines = [f"# {title}", "", "## Métadonnées"]
+
+    append_markdown_metadata(lines, "URL", video.get("url"))
+    append_markdown_metadata(lines, "Identifiant", video.get("id"))
+
+    channel = video.get("channel")
+    if isinstance(channel, dict):
+        append_markdown_metadata(lines, "Chaîne", channel.get("name"))
+        append_markdown_metadata(lines, "URL de la chaîne", channel.get("url"))
+
+    duration = safe_optional_float(video.get("duration_seconds"))
+    if duration is not None:
+        append_markdown_metadata(lines, "Durée", format_timestamp(duration))
+
+    append_markdown_metadata(
+        lines,
+        "Date de publication",
+        video.get("upload_date"),
+    )
+    append_markdown_metadata(lines, "Langue", transcript.get("language"))
+
+    subtitle_source = optional_string(transcript.get("source"))
+    if subtitle_source:
+        source_label = {
+            "manual": "sous-titres manuels",
+            "automatic": "sous-titres automatiques",
+        }.get(subtitle_source, subtitle_source)
+        append_markdown_metadata(lines, "Source", source_label)
+
+    if isinstance(statistics, dict):
+        append_markdown_metadata(
+            lines,
+            "Nombre de mots",
+            statistics.get("word_count"),
+        )
+
+    description = optional_string(video.get("description"))
+    if description:
+        lines.extend(["", "## Description", "", description])
+
+    tags = video.get("tags")
+    if isinstance(tags, list):
+        normalized_tags = [
+            normalize_inline_whitespace(tag)
+            for tag in tags
+            if isinstance(tag, str) and tag.strip()
+        ]
+        if normalized_tags:
+            lines.extend(
+                ["", "## Tags YouTube", "", ", ".join(normalized_tags)]
+            )
+
+    public_statistics = video.get("public_statistics")
+    if isinstance(public_statistics, dict):
+        statistic_lines: list[str] = []
+        for label, key in (
+            ("Vues", "view_count"),
+            ("J'aime", "like_count"),
+            ("Commentaires", "comment_count"),
+        ):
+            value = public_statistics.get(key)
+            if value is not None:
+                statistic_lines.append(f"- **{label}** : {value}")
+
+        if statistic_lines:
+            lines.extend(["", "## Statistiques publiques", ""])
+            lines.extend(statistic_lines)
+
+    if isinstance(chapters, list) and chapters:
+        chapter_lines = ["", "## Chapitres", ""]
+        for chapter in chapters:
+            if not isinstance(chapter, dict):
+                continue
+
+            chapter_title = optional_string(chapter.get("title"))
+            start = safe_optional_float(chapter.get("start_seconds"))
+            end = safe_optional_float(chapter.get("end_seconds"))
+
+            if chapter_title is None or start is None:
+                continue
+
+            timestamp = format_timestamp(start)
+            if end is not None:
+                timestamp = f"{timestamp}–{format_timestamp(end)}"
+
+            chapter_lines.append(
+                f"- `{timestamp}` — {chapter_title}"
+            )
+
+        if len(chapter_lines) > 3:
+            lines.extend(chapter_lines)
+
+    segments = transcript.get("segments")
+    if isinstance(segments, list) and segments:
+        lines.extend(["", "## Transcription horodatée", ""])
+
+        for segment in segments:
+            if not isinstance(segment, dict):
+                continue
+
+            start_ms = safe_int(segment.get("start_ms"), default=0)
+            text = optional_string(segment.get("text"))
+            if text:
+                lines.append(
+                    f"- `{format_timestamp(start_ms / 1000)}` {text}"
+                )
+    else:
+        transcript_text = optional_string(transcript.get("text"))
+        if transcript_text is None:
+            raise TranscriptError(
+                "Impossible de produire la sortie agent : transcription absente."
+            )
+        lines.extend(["", "## Transcription", "", transcript_text])
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def append_markdown_metadata(
+    lines: list[str],
+    label: str,
+    value: Any,
+) -> None:
+    """Ajoute une métadonnée non vide à une liste de lignes Markdown."""
+    if value is None:
+        return
+
+    normalized_value = normalize_inline_whitespace(str(value))
+    if normalized_value:
+        lines.append(f"- **{label}** : {normalized_value}")
+
+
+def format_timestamp(seconds: float) -> str:
+    """Formate une durée en MM:SS ou HH:MM:SS."""
+    total_seconds = max(0, int(seconds))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, remaining_seconds = divmod(remainder, 60)
+
+    if hours:
+        return f"{hours:02d}:{minutes:02d}:{remaining_seconds:02d}"
+
+    return f"{minutes:02d}:{remaining_seconds:02d}"
+
+
 def normalize_transcript_text(text: str) -> str:
     """Normalise le transcript sans créer de paragraphes."""
     text = normalize_inline_whitespace(text)
@@ -861,7 +1017,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Extrait les métadonnées et le transcript d'une vidéo YouTube "
-            "dans un document JSON structuré."
+            "dans un document JSON ou Markdown."
         )
     )
 
@@ -897,16 +1053,28 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--pretty",
         action="store_true",
-        help="indente le JSON pour le rendre lisible par un humain",
+        help="indente la sortie JSON pour la rendre lisible par un humain",
     )
 
-    parser.add_argument(
+    output_group = parser.add_mutually_exclusive_group()
+
+    output_group.add_argument(
         "--output",
         type=Path,
         metavar="OUTPUT_FILE",
         help=(
             "écrit le document JSON dans ce fichier UTF-8 au lieu de "
             "l'afficher sur la sortie standard"
+        ),
+    )
+
+    output_group.add_argument(
+        "--agent-output",
+        type=Path,
+        metavar="MARKDOWN_FILE",
+        help=(
+            "écrit un document Markdown UTF-8 conçu pour être lu directement "
+            "par un agent"
         ),
     )
 
@@ -945,26 +1113,46 @@ def main() -> int:
         )
         return 1
 
-    indent = 2 if arguments.pretty else None
+    if arguments.agent_output is not None:
+        try:
+            document = render_agent_markdown(result)
+        except TranscriptError as exc:
+            error_result = {
+                "schema_version": SCHEMA_VERSION,
+                "error": {
+                    "type": exc.__class__.__name__,
+                    "message": str(exc),
+                },
+            }
+            print(
+                json.dumps(error_result, ensure_ascii=False, indent=2),
+                file=sys.stderr,
+            )
+            return 1
 
-    document = json.dumps(
-        result,
-        ensure_ascii=False,
-        indent=indent,
-    )
+        output_path = arguments.agent_output
+    else:
+        indent = 2 if arguments.pretty else None
+        document = json.dumps(
+            result,
+            ensure_ascii=False,
+            indent=indent,
+        )
+        output_path = arguments.output
 
-    if arguments.output is None:
+    if output_path is None:
         print(document)
         return 0
 
     try:
-        with arguments.output.open(
+        with output_path.open(
             "w",
             encoding="utf-8",
             newline="\n",
         ) as output_file:
             output_file.write(document)
-            output_file.write("\n")
+            if not document.endswith("\n"):
+                output_file.write("\n")
     except OSError as exc:
         error_result = {
             "schema_version": SCHEMA_VERSION,
@@ -972,7 +1160,7 @@ def main() -> int:
                 "type": exc.__class__.__name__,
                 "message": (
                     f"Impossible d'écrire le fichier de sortie "
-                    f"{arguments.output}: {exc}"
+                    f"{output_path}: {exc}"
                 ),
             },
         }

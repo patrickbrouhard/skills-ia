@@ -54,7 +54,9 @@ yt-dlp
    ↓
 téléchargement JSON3 avec urllib
    ↓
-JSON structuré
+document de sortie
+   ├── Markdown pour l'agent
+   └── JSON pour les usages programmatiques
    ↓
 agent
    ├── compréhension
@@ -105,13 +107,22 @@ L'installation locale est recommandée lorsque la skill fonctionne dans un envir
 
 ## Extraction d'une vidéo
 
-Exécution minimale :
+Pour produire le document destiné à un agent :
+
+```bash
+python scripts/youtube_transcript.py \
+  "https://www.youtube.com/watch?v=VIDEO_ID" \
+  --agent-output video.md
+```
+
+Le Markdown contient directement les métadonnées utiles, les chapitres et la
+transcription. C'est la sortie recommandée pour les workflows des agents.
+
+Pour obtenir le JSON sur `stdout` :
 
 ```bash
 python scripts/youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
-
-La sortie est un document JSON écrit sur `stdout`.
 
 Pour une sortie indentée :
 
@@ -128,6 +139,8 @@ python scripts/youtube_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID" 
 | `--include-tags`              | Ajoute les tags YouTube                       |
 | `--include-public-statistics` | Ajoute les statistiques publiques disponibles |
 | `--pretty`                    | Indente le JSON                               |
+| `--output FICHIER`            | Écrit le JSON dans un fichier UTF-8           |
+| `--agent-output FICHIER`      | Écrit le document Markdown pour l'agent       |
 
 Exemple :
 
@@ -151,7 +164,7 @@ Le transcript est ensuite normalisé en texte continu.
 
 ## Données retournées
 
-Le JSON peut notamment contenir :
+Le Markdown pour agent et le JSON peuvent notamment contenir :
 
 * identifiant de la vidéo ;
 * URL canonique ;
@@ -165,7 +178,8 @@ Le JSON peut notamment contenir :
 * chapitres ;
 * statistiques calculées sur le transcript.
 
-Des champs supplémentaires peuvent être demandés avec les options de ligne de commande.
+Des champs supplémentaires peuvent être demandés avec les options de ligne de
+commande. `--output` et `--agent-output` sont mutuellement exclusifs.
 
 ## Résumé
 
