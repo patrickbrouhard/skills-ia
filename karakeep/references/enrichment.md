@@ -14,9 +14,11 @@ Le titre peut être fourni à la création. Le schéma actuel de `create_bookmar
 2. Produire un résumé fidèle lorsque le contenu permet d'en produire un utile.
 3. Déterminer les tags avec le skill `tagging` à partir du contenu réel.
 4. Créer le bookmark avec `create_bookmark`, en fournissant le titre lorsqu'il est disponible.
-5. Ajouter le résumé ou la note avec `update_bookmark` seulement lorsque son schéma le permet.
-6. Attacher les tags avec `attach_tag_to_bookmark`.
-7. Vérifier les informations effectivement enregistrées.
+5. Après obtention de l'identifiant du bookmark et application des règles d'idempotence, effectuer les enrichissements autorisés :
+   - ajouter le résumé ou la note avec `update_bookmark` lorsque son schéma le permet ;
+   - attacher les tags avec `attach_tag_to_bookmark`.
+   Lorsque les deux opérations sont nécessaires, les lancer en parallèle : elles sont indépendantes à ce stade.
+6. Attendre et interpréter le résultat de chaque enrichissement, puis vérifier les informations effectivement enregistrées.
 
 Appliquer les règles d'idempotence du skill principal si la ressource existe déjà. Ne jamais inventer un paramètre absent du schéma MCP courant.
 
