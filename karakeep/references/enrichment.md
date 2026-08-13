@@ -18,7 +18,7 @@ Le titre peut être fourni à la création. Le schéma actuel de `create_bookmar
    - ajouter le résumé ou la note avec `update_bookmark` lorsque son schéma le permet ;
    - attacher les tags avec `attach_tag_to_bookmark`.
    Lorsque les deux opérations sont nécessaires, les lancer en parallèle : elles sont indépendantes à ce stade.
-6. Attendre et interpréter le résultat de chaque enrichissement, puis vérifier les informations effectivement enregistrées.
+6. Attendre et interpréter le résultat de chaque enrichissement, puis vérifier le résumé, les tags et les propriétés explicitement demandées effectivement enregistrés.
 
 Appliquer les règles d'idempotence du skill principal si la ressource existe déjà. Ne jamais inventer un paramètre absent du schéma MCP courant.
 
@@ -40,6 +40,8 @@ Utiliser le skill `youtube` pour obtenir le document d'extraction et appliquer s
 
 Le skill `youtube` est responsable du format et du cycle de vie de ses fichiers temporaires. Ne pas reproduire ici une lecture ou une transformation du JSON.
 Ne pas résumer une vidéo depuis son seul titre ou sa description lorsqu'une transcription est disponible.
+
+Pour un lot, appliquer la stratégie de lecture définie par le skill `youtube`. Après chaque transcription, préparer une fiche compacte contenant le titre, l'URL canonique, le résumé et les tags ; utiliser ensuite ces fiches pour les opérations MCP parallélisables.
 
 ## Adaptation des tags à Karakeep
 

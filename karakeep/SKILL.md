@@ -118,6 +118,8 @@ Après une opération, indiquer succinctement :
 - les éléments ignorés ou non pris en charge, avec une raison concise ;
 - toute opération partiellement réussie.
 
+Pour un lot, ne jamais remplacer ce détail par un simple total global. Fournir une ligne par bookmark avec son titre, son résultat, ses tags et les propriétés explicitement demandées, puis éventuellement un total récapitulatif.
+
 Si l’utilisateur demande explicitement un « mode debug », fournir les détails techniques non sensibles utiles à la compréhension de l’opération, comme les outils appelés, leurs paramètres non secrets, les fichiers consultés et les statuts retournés.
 
 Ne jamais afficher les clés API, variables d’environnement secrètes, en-têtes d’autorisation, jetons, cookies ou autres identifiants sensibles, même en mode debug.

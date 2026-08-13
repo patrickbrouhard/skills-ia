@@ -27,14 +27,19 @@ Pour chaque URL :
 5. utiliser la transcription comme source principale et les métadonnées comme contexte complémentaire ;
 6. supprimer le fichier après l'achèvement et la vérification de la tâche qui en dépend.
 
-Pour plusieurs vidéos, conserver un fichier distinct par URL afin de ne pas mélanger leurs métadonnées, transcriptions ou résultats.
+Pour plusieurs vidéos :
+
+1. conserver un fichier distinct par URL et effectuer les extractions en parallèle lorsque l'environnement le permet ;
+2. ne jamais regrouper plusieurs transcriptions complètes dans un même appel de lecture ou une même sortie d'outil ;
+3. traiter les fichiers un par un : lire une transcription dans un appel dédié, produire immédiatement le résultat demandé et n'en conserver pour la suite qu'une fiche compacte, puis passer au fichier suivant ;
+4. si la lecture dédiée d'un seul fichier est tronquée, lire des portions non chevauchantes couvrant tout le fichier ; ne pas relire intégralement les mêmes données ni substituer les premières lignes à la transcription complète.
 
 Sans option de sortie, le script écrit toujours le JSON sur `stdout` pour les usages manuels ou de débogage. `--output` permet encore d'écrire ce JSON dans
 un fichier. Ne demander les options d'extraction supplémentaires que si elles sont utiles à la tâche.
 
 ## Résumé
 
-Consulter `references/summarize-transcript.md` uniquement lorsqu'un résumé est nécessaire.
+Déterminer avant de lire la première transcription si un résumé est nécessaire. Si oui, consulter `references/summarize-transcript.md` avant cette lecture et avant de rédiger le moindre résumé.
 
 Produire le résumé principalement à partir de la transcription.
 
