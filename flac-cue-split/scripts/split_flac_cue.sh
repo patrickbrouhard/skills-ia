@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-NAME_HELPER="$SCRIPT_DIR/build_track_filenames.py"
-TRACKLIST=""
+FILENAME_VALIDATOR="$SCRIPT_DIR/validate_track_filenames.py"
+FILENAMES_FILE=""
 
 info() { printf '\n==> %s\n' "$*"; }
 warn() { printf '\nAVERTISSEMENT: %s\n' "$*" >&2; }
@@ -11,7 +11,7 @@ die()  { printf '\nERREUR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
     cat <<'EOF'
-Usage: split_flac_cue.sh --tracklist FICHIER DOSSIER_ALBUM
+Usage: split_flac_cue.sh --filenames FICHIER DOSSIER_ALBUM
 
 Découpe l'unique FLAC selon l'unique CUE, vérifie le PCM bit-perfect,
 installe les pistes à la racine et déplace les sources dans backup/.
@@ -20,9 +20,9 @@ EOF
 
 while (($#)); do
     case "$1" in
-        --tracklist)
-            (($# >= 2)) || die "--tracklist requiert un chemin."
-            TRACKLIST="$2"
+        --filenames)
+            (($# >= 2)) || die "--filenames requiert un chemin."
+            FILENAMES_FILE="$2"
             shift 2
             ;;
         -h|--help)
@@ -43,7 +43,7 @@ while (($#)); do
 done
 
 (($# == 1)) || { usage >&2; exit 2; }
-[[ -n "$TRACKLIST" ]] || die "--tracklist est obligatoire."
+[[ -n "$FILENAMES_FILE" ]] || die "--filenames est obligatoire."
 ALBUM_ARG="$1"
 [[ -d "$ALBUM_ARG" ]] || die "Dossier introuvable : $ALBUM_ARG"
 ALBUM_DIR="$(cd -- "$ALBUM_ARG" && pwd -P)"
@@ -51,7 +51,7 @@ BACKUP_DIR="$ALBUM_DIR/backup"
 
 info "Vérification des dépendances"
 missing=()
-for cmd in cuebreakpoints shnsplit flac sha256sum python3 awk find sort sed basename dirname mktemp mv; do
+for cmd in cuebreakpoints shnsplit flac sha256sum python3 awk find sort sed basename dirname mktemp mv rm; do
     command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
 done
 if ((${#missing[@]})); then
@@ -59,7 +59,7 @@ if ((${#missing[@]})); then
     printf 'Sur Ubuntu/WSL, les paquets requis sont généralement : cuetools shntool flac\n' >&2
     exit 1
 fi
-[[ -f "$NAME_HELPER" ]] || die "Helper introuvable : $NAME_HELPER"
+[[ -f "$FILENAME_VALIDATOR" ]] || die "Validateur introuvable : $FILENAME_VALIDATOR"
 
 mapfile -d '' FLACS < <(find "$ALBUM_DIR" -maxdepth 1 -type f -iname '*.flac' -print0 | sort -zV)
 mapfile -d '' CUES  < <(find "$ALBUM_DIR" -maxdepth 1 -type f -iname '*.cue'  -print0 | sort -zV)
@@ -75,13 +75,91 @@ fi
 
 FLAC_FILE="${FLACS[0]}"
 CUE_FILE="${CUES[0]}"
-[[ -f "$TRACKLIST" ]] || die "Tracklist introuvable : $TRACKLIST"
-TRACKLIST="$(cd -- "$(dirname -- "$TRACKLIST")" && pwd -P)/$(basename -- "$TRACKLIST")"
+[[ -f "$FILENAMES_FILE" ]] || die "Manifeste de noms introuvable : $FILENAMES_FILE"
+FILENAMES_FILE="$(cd -- "$(dirname -- "$FILENAMES_FILE")" && pwd -P)/$(basename -- "$FILENAMES_FILE")"
 
 TRACK_COUNT="$(awk '{sub(/\r$/, "")} toupper($1)=="TRACK" && toupper($3)=="AUDIO" {n++} END {print n+0}' "$CUE_FILE")"
 ((TRACK_COUNT >= 2)) || die "Le CUE doit déclarer au moins deux pistes AUDIO ; $TRACK_COUNT trouvée(s)."
 TOTAL_TRACK_COUNT="$(awk '{sub(/\r$/, "")} toupper($1)=="TRACK" {n++} END {print n+0}' "$CUE_FILE")"
 ((TOTAL_TRACK_COUNT == TRACK_COUNT)) || die "Les CUE mixtes AUDIO/DATA ne sont pas pris en charge."
+
+if ! CUE_STRUCTURE_ERRORS="$(awk '
+    function issue(message) {
+        print message
+        invalid = 1
+    }
+    function finish_track() {
+        if (have_track && index01_count != 1) {
+            issue("Piste " track_label " : " index01_count " INDEX 01 trouvé(s), 1 attendu.")
+        }
+    }
+    {
+        sub(/\r$/, "")
+        keyword = toupper($1)
+
+        if (keyword == "FILE") {
+            file_count++
+        }
+
+        if (keyword == "TRACK") {
+            finish_track()
+            have_track = 0
+            if (toupper($3) == "AUDIO") {
+                audio_count++
+                track_label = $2
+                index01_count = 0
+                if ($2 !~ /^[0-9]+$/) {
+                    issue("Numéro de piste AUDIO invalide : " $2)
+                } else if (($2 + 0) != audio_count) {
+                    issue("Piste AUDIO " $2 " : numéro " audio_count " attendu.")
+                }
+                have_track = 1
+            }
+            next
+        }
+
+        if (keyword == "INDEX" && have_track && $2 == "01") {
+            index01_count++
+            position = $3
+            if (position !~ /^[0-9]+:[0-5][0-9]:[0-7][0-9]$/) {
+                issue("Piste " track_label " : INDEX 01 invalide : " position)
+                next
+            }
+            split(position, parts, ":")
+            sectors = ((parts[1] * 60 + parts[2]) * 75) + parts[3]
+            if (have_previous_index && sectors <= previous_sectors) {
+                issue("Piste " track_label " : INDEX 01 non strictement croissant.")
+            }
+            previous_sectors = sectors
+            have_previous_index = 1
+        }
+    }
+    END {
+        finish_track()
+        if (file_count != 1) {
+            issue("Le CUE doit contenir exactement une déclaration FILE ; " file_count " trouvée(s).")
+        }
+        if (invalid) {
+            exit 1
+        }
+    }
+' "$CUE_FILE")"; then
+    printf '%s\n' "$CUE_STRUCTURE_ERRORS" >&2
+    die "La structure technique du CUE est invalide."
+fi
+
+VALIDATED_NAMES_FILE="$(mktemp)"
+if ! python3 "$FILENAME_VALIDATOR" \
+    --filenames "$FILENAMES_FILE" \
+    --expected-count "$TRACK_COUNT" \
+    --format nul > "$VALIDATED_NAMES_FILE"; then
+    rm -f -- "$VALIDATED_NAMES_FILE"
+    die "Le manifeste de noms de fichiers est invalide."
+fi
+mapfile -d '' TARGET_NAMES < "$VALIDATED_NAMES_FILE"
+rm -f -- "$VALIDATED_NAMES_FILE"
+((${#TARGET_NAMES[@]} == TRACK_COUNT)) || \
+    die "Le validateur a produit ${#TARGET_NAMES[@]} noms ; $TRACK_COUNT attendus."
 
 mapfile -t CUE_REFERENCES < <(sed -nE 's/^[[:space:]]*FILE[[:space:]]+"([^"]+)".*/\1/p' "$CUE_FILE")
 if ((${#CUE_REFERENCES[@]} > 1)); then
@@ -101,7 +179,13 @@ info "Sources détectées"
 printf 'FLAC   : %s\n' "$(basename -- "$FLAC_FILE")"
 printf 'CUE    : %s\n' "$(basename -- "$CUE_FILE")"
 printf 'Pistes : %d\n' "$TRACK_COUNT"
-printf 'Titres : %s\n' "$TRACKLIST"
+printf 'Noms   : %s\n' "$FILENAMES_FILE"
+
+info "Noms de pistes validés"
+printf '  %s\n' "${TARGET_NAMES[@]}"
+for target_name in "${TARGET_NAMES[@]}"; do
+    [[ ! -e "$ALBUM_DIR/$target_name" ]] || die "Le fichier cible existe déjà : $target_name"
+done
 
 info "Test d'intégrité du FLAC source"
 flac -t "$FLAC_FILE"
@@ -109,7 +193,6 @@ flac -t "$FLAC_FILE"
 STAGE_DIR="$(mktemp -d "$ALBUM_DIR/.flac-cue-split.XXXXXXXX")"
 TRACK_DIR="$STAGE_DIR/tracks"
 BREAKPOINTS_FILE="$STAGE_DIR/breakpoints.txt"
-MANIFEST_FILE="$STAGE_DIR/names.nul"
 mkdir -- "$TRACK_DIR"
 
 FINALIZING=0
@@ -145,16 +228,6 @@ on_exit() {
     exit "$status"
 }
 trap on_exit EXIT
-
-python3 "$NAME_HELPER" --cue "$CUE_FILE" --tracklist "$TRACKLIST" > "$MANIFEST_FILE"
-mapfile -d '' TARGET_NAMES < "$MANIFEST_FILE"
-((${#TARGET_NAMES[@]} == TRACK_COUNT)) || die "Le helper a produit ${#TARGET_NAMES[@]} noms ; $TRACK_COUNT attendus."
-
-info "Noms de pistes prévus"
-printf '  %s\n' "${TARGET_NAMES[@]}"
-for target_name in "${TARGET_NAMES[@]}"; do
-    [[ ! -e "$ALBUM_DIR/$target_name" ]] || die "Le fichier cible existe déjà : $target_name"
-done
 
 info "Lecture et validation des points de découpe"
 cuebreakpoints --append-gaps "$CUE_FILE" > "$BREAKPOINTS_FILE"
@@ -232,7 +305,7 @@ for ((i=0; i<TRACK_COUNT; i++)); do
 done
 FINALIZING=0
 
-rm -f -- "$BREAKPOINTS_FILE" "$MANIFEST_FILE" || warn "Nettoyage incomplet dans $STAGE_DIR"
+rm -f -- "$BREAKPOINTS_FILE" || warn "Nettoyage incomplet dans $STAGE_DIR"
 rmdir -- "$TRACK_DIR" 2>/dev/null || warn "Dossier temporaire non vide : $TRACK_DIR"
 rmdir -- "$STAGE_DIR" 2>/dev/null || warn "Dossier temporaire conservé : $STAGE_DIR"
 trap - EXIT

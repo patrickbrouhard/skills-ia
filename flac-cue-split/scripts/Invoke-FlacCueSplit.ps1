@@ -5,7 +5,7 @@ param(
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $TracklistPath,
+    [string] $FilenamesPath,
 
     [string] $Distro = 'Ubuntu-24.04'
 )
@@ -41,11 +41,11 @@ $bashScript = Join-Path -Path $PSScriptRoot -ChildPath 'split_flac_cue.sh'
 $wslScript = Convert-ToWslPath -LiteralPath $bashScript -Distribution $Distro
 $wslAlbum = Convert-ToWslPath -LiteralPath $AlbumPath -Distribution $Distro
 
-$wslTracklist = Convert-ToWslPath -LiteralPath $TracklistPath -Distribution $Distro
+$wslFilenames = Convert-ToWslPath -LiteralPath $FilenamesPath -Distribution $Distro
 $wslArguments = @(
     '--distribution', $Distro,
     '--exec', 'bash', $wslScript,
-    '--tracklist', $wslTracklist,
+    '--filenames', $wslFilenames,
     $wslAlbum
 )
 
