@@ -43,6 +43,8 @@ Ne pas charger ces références pour une opération qui n'en a pas besoin.
 
 Utiliser `search_bookmarks` pour rechercher des bookmarks.
 Pour une recherche simple, transmettre les termes utiles sans complexifier inutilement la requête.
+Pour une recherche exhaustive, suivre chaque `nextCursor` jusqu'à l'absence de page suivante.
+Exploiter directement les champs présents dans les résultats de recherche ; ne pas appeler `get_bookmark` pour chaque résultat si ces champs suffisent.
 Une recherche sur `url:` est une recherche par correspondance et ne constitue pas toujours une vérification exacte de l’URL.
 Utiliser `get_bookmark` pour récupérer les métadonnées d’un résultat précis.
 Utiliser `get_bookmark_content` lorsque la demande nécessite le contenu archivé ou textuel du bookmark, et pas seulement ses métadonnées.

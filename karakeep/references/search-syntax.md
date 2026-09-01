@@ -42,6 +42,21 @@ Les unités acceptées par `age:` sont :
 - `m` : mois ;
 - `y` : années.
 
+## Pagination et filtrage des résultats
+
+Pour parcourir toute une collection :
+
+1. appeler `search_bookmarks` avec `limit: 20` ;
+2. traiter les bookmarks de la page retournée ;
+3. transmettre exactement le `nextCursor` reçu à l'appel suivant ;
+4. continuer jusqu'à ce que la réponse indique qu'il n'y a plus de page.
+
+Ne pas conclure que le parcours est terminé à partir du nombre de pages déjà lues.
+
+Les résultats compacts de `search_bookmarks` exposent notamment `Summary:` et `Note:`. Pour trouver les bookmarks sans résumé ou sans note, filtrer directement les résultats dont la valeur correspondante est vide. Ne pas appeler `get_bookmark` pour chaque résultat ; le réserver aux informations absentes de la sortie compacte ou à la résolution d'une ambiguïté.
+
+Ne pas utiliser `Summarization status` pour déterminer si `Summary:` contient une valeur : un statut `success` peut accompagner un résumé vide comme un résumé renseigné.
+
 ## Exemples
 
 Favoris récents associés à l’IA :
