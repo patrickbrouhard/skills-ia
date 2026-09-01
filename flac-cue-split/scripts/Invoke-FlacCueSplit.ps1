@@ -3,9 +3,11 @@ param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string] $AlbumPath,
 
-    [string] $Distro = 'Ubuntu-24.04',
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string] $TracklistPath,
 
-    [string] $TracklistPath
+    [string] $Distro = 'Ubuntu-24.04'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -39,12 +41,13 @@ $bashScript = Join-Path -Path $PSScriptRoot -ChildPath 'split_flac_cue.sh'
 $wslScript = Convert-ToWslPath -LiteralPath $bashScript -Distribution $Distro
 $wslAlbum = Convert-ToWslPath -LiteralPath $AlbumPath -Distribution $Distro
 
-$wslArguments = @('--distribution', $Distro, '--exec', 'bash', $wslScript)
-if (-not [string]::IsNullOrWhiteSpace($TracklistPath)) {
-    $wslTracklist = Convert-ToWslPath -LiteralPath $TracklistPath -Distribution $Distro
-    $wslArguments += @('--tracklist', $wslTracklist)
-}
-$wslArguments += $wslAlbum
+$wslTracklist = Convert-ToWslPath -LiteralPath $TracklistPath -Distribution $Distro
+$wslArguments = @(
+    '--distribution', $Distro,
+    '--exec', 'bash', $wslScript,
+    '--tracklist', $wslTracklist,
+    $wslAlbum
+)
 
 & wsl.exe @wslArguments
 if ($LASTEXITCODE -ne 0) {

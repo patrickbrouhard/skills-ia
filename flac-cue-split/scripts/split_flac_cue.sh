@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-NAME_HELPER="$SCRIPT_DIR/cue_track_names.py"
+NAME_HELPER="$SCRIPT_DIR/build_track_filenames.py"
 TRACKLIST=""
 
 info() { printf '\n==> %s\n' "$*"; }
@@ -11,7 +11,7 @@ die()  { printf '\nERREUR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
     cat <<'EOF'
-Usage: split_flac_cue.sh [--tracklist FICHIER] DOSSIER_ALBUM
+Usage: split_flac_cue.sh --tracklist FICHIER DOSSIER_ALBUM
 
 Découpe l'unique FLAC selon l'unique CUE, vérifie le PCM bit-perfect,
 installe les pistes à la racine et déplace les sources dans backup/.
@@ -43,6 +43,7 @@ while (($#)); do
 done
 
 (($# == 1)) || { usage >&2; exit 2; }
+[[ -n "$TRACKLIST" ]] || die "--tracklist est obligatoire."
 ALBUM_ARG="$1"
 [[ -d "$ALBUM_ARG" ]] || die "Dossier introuvable : $ALBUM_ARG"
 ALBUM_DIR="$(cd -- "$ALBUM_ARG" && pwd -P)"
@@ -64,17 +65,18 @@ mapfile -d '' FLACS < <(find "$ALBUM_DIR" -maxdepth 1 -type f -iname '*.flac' -p
 mapfile -d '' CUES  < <(find "$ALBUM_DIR" -maxdepth 1 -type f -iname '*.cue'  -print0 | sort -zV)
 ((${#FLACS[@]} == 1)) || die "Un seul FLAC est attendu à la racine ; ${#FLACS[@]} trouvé(s)."
 ((${#CUES[@]} == 1))  || die "Un seul CUE est attendu à la racine ; ${#CUES[@]} trouvé(s)."
-[[ ! -e "$BACKUP_DIR" ]] || die "Le chemin '$BACKUP_DIR' existe déjà."
+BACKUP_CREATED=0
+if [[ -e "$BACKUP_DIR" ]]; then
+    [[ -d "$BACKUP_DIR" ]] || die "Le chemin '$BACKUP_DIR' existe mais n'est pas un dossier."
+    if [[ -n "$(find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+        die "Le dossier '$BACKUP_DIR' existe et n'est pas vide."
+    fi
+fi
 
 FLAC_FILE="${FLACS[0]}"
 CUE_FILE="${CUES[0]}"
-if [[ -z "$TRACKLIST" && -f "$ALBUM_DIR/tracks.txt" ]]; then
-    TRACKLIST="$ALBUM_DIR/tracks.txt"
-fi
-if [[ -n "$TRACKLIST" ]]; then
-    [[ -f "$TRACKLIST" ]] || die "Tracklist introuvable : $TRACKLIST"
-    TRACKLIST="$(cd -- "$(dirname -- "$TRACKLIST")" && pwd -P)/$(basename -- "$TRACKLIST")"
-fi
+[[ -f "$TRACKLIST" ]] || die "Tracklist introuvable : $TRACKLIST"
+TRACKLIST="$(cd -- "$(dirname -- "$TRACKLIST")" && pwd -P)/$(basename -- "$TRACKLIST")"
 
 TRACK_COUNT="$(awk '{sub(/\r$/, "")} toupper($1)=="TRACK" && toupper($3)=="AUDIO" {n++} END {print n+0}' "$CUE_FILE")"
 ((TRACK_COUNT >= 2)) || die "Le CUE doit déclarer au moins deux pistes AUDIO ; $TRACK_COUNT trouvée(s)."
@@ -99,11 +101,7 @@ info "Sources détectées"
 printf 'FLAC   : %s\n' "$(basename -- "$FLAC_FILE")"
 printf 'CUE    : %s\n' "$(basename -- "$CUE_FILE")"
 printf 'Pistes : %d\n' "$TRACK_COUNT"
-if [[ -n "$TRACKLIST" ]]; then
-    printf 'Titres : %s\n' "$TRACKLIST"
-else
-    printf 'Titres : champs TITLE des pistes du CUE\n'
-fi
+printf 'Titres : %s\n' "$TRACKLIST"
 
 info "Test d'intégrité du FLAC source"
 flac -t "$FLAC_FILE"
@@ -137,7 +135,9 @@ on_exit() {
                     mv -- "${MOVED_BACKUPS[$i]}" "${MOVED_ORIGINALS[$i]}" || rollback_failed=1
                 fi
             done
-            rmdir -- "$BACKUP_DIR" 2>/dev/null || true
+            if ((BACKUP_CREATED)); then
+                rmdir -- "$BACKUP_DIR" 2>/dev/null || true
+            fi
             ((rollback_failed == 0)) || warn "Rollback incomplet : vérifier manuellement l'album et backup/."
         fi
         warn "Échec. Les fichiers de travail sont conservés dans : $STAGE_DIR"
@@ -146,9 +146,7 @@ on_exit() {
 }
 trap on_exit EXIT
 
-helper_args=(--cue "$CUE_FILE")
-[[ -z "$TRACKLIST" ]] || helper_args+=(--tracklist "$TRACKLIST")
-python3 "$NAME_HELPER" "${helper_args[@]}" > "$MANIFEST_FILE"
+python3 "$NAME_HELPER" --cue "$CUE_FILE" --tracklist "$TRACKLIST" > "$MANIFEST_FILE"
 mapfile -d '' TARGET_NAMES < "$MANIFEST_FILE"
 ((${#TARGET_NAMES[@]} == TRACK_COUNT)) || die "Le helper a produit ${#TARGET_NAMES[@]} noms ; $TRACK_COUNT attendus."
 
@@ -207,9 +205,6 @@ while IFS= read -r -d '' log_file; do
         INPUTS+=("$log_file")
     fi
 done < <(find "$ALBUM_DIR" -maxdepth 1 -type f -iname '*.log' -print0)
-if [[ -n "$TRACKLIST" && "$(dirname -- "$TRACKLIST")" == "$ALBUM_DIR" ]]; then
-    INPUTS+=("$TRACKLIST")
-fi
 
 for input in "${INPUTS[@]}"; do
     backup_target="$BACKUP_DIR/$(basename -- "$input")"
@@ -218,7 +213,10 @@ done
 
 info "Vérifications réussies ; installation transactionnelle du résultat"
 FINALIZING=1
-mkdir -- "$BACKUP_DIR"
+if [[ ! -d "$BACKUP_DIR" ]]; then
+    mkdir -- "$BACKUP_DIR"
+    BACKUP_CREATED=1
+fi
 for input in "${INPUTS[@]}"; do
     backup_target="$BACKUP_DIR/$(basename -- "$input")"
     mv -- "$input" "$backup_target"
