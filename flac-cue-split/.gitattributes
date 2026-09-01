@@ -1,1 +1,2 @@
 scripts/*.sh text eol=lf
+scripts/*.awk text eol=lf
