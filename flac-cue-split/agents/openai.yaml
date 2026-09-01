@@ -1,0 +1,4 @@
+interface:
+  display_name: "FLAC CUE Split"
+  short_description: "Découpe un album FLAC selon son CUE"
+  default_prompt: "Utilise $flac-cue-split pour découper cet album en pistes FLAC bit-perfect."
